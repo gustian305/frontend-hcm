@@ -5,6 +5,7 @@ import { Menu } from "lucide-react";
 
 const menuItems = [
   { label: "Home", path: "/" },
+  { label: "Features", path: "/features" },
   { label: "Resources", path: "/resources" },
   { label: "Pricing", path: "/pricing" },
   { label: "Recruitment", path: "/recruitment" },

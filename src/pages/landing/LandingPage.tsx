@@ -5,8 +5,10 @@ import { fetchJobVacanciesPublic } from "../../store/slices/jobVacancySlice";
 
 import JobModal from "../../components/modal/JobModal";
 import NavbarLanding from "./components/NavbarLanding";
-import HeroLanding from "./components/HeroLanding";
+import HeroSection from "./components/HeroSection";
 import JobList from "./components/JobList";
+import FeaturesSection from "./components/FeaturesSection";
+import ResourcesSection from "./components/ResourcesSection";
 
 const LandingPage: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -25,8 +27,14 @@ const LandingPage: React.FC = () => {
 
       {/* HERO SECTION */}
       <div className="relative py-15">
-        <HeroLanding />
+        <HeroSection />
       </div>
+
+      {/* FEATURE SECTION */}
+      <FeaturesSection />
+
+      {/* RESOURCES SECTION */}
+      <ResourcesSection />
 
       {/* JOB SECTION */}
       <JobList
