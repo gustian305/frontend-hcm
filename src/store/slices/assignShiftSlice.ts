@@ -6,7 +6,7 @@ import assignShift, {
   AssignShiftRequest,
   RemoveShiftRequest,
   SwitchShiftRequest,
-} from "../../service/assignShift";
+} from "../../service/assignShiftService";
 
 // =======================
 // Thunks

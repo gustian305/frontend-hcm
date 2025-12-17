@@ -1,10 +1,9 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
-import {
+import WorkLeaveService, {
   CreateWorkLeaveRequest,
   DataWorkLeave,
   LeaveBalanceInfo,
   WorkLeavePayload,
-  WorkLeaveService,
 } from "../../service/workLeaveService";
 
 // ============================

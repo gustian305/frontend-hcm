@@ -146,3 +146,58 @@ export function buildShiftRequest(data: {
     isActive: data.isActive,
   };
 }
+
+const ID_MONTH_MAP: Record<string, number> = {
+  januari: 0,
+  februari: 1,
+  maret: 2,
+  april: 3,
+  mei: 4,
+  juni: 5,
+  juli: 6,
+  agustus: 7,
+  september: 8,
+  oktober: 9,
+  november: 10,
+  desember: 11,
+};
+
+export const parseBackendDate = (value?: string): Date | null => {
+  if (!value) return null;
+
+  // 1️⃣ Coba parse ISO / backend datetime
+  const normalized = value.includes(" ")
+    ? value.replace(" ", "T")
+    : value;
+
+  const isoDate = new Date(normalized);
+  if (!isNaN(isoDate.getTime())) {
+    return isoDate;
+  }
+
+  // 2️⃣ Coba parse format Indonesia: "1 Januari 2025"
+  const match = value.match(/^(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})$/);
+  if (match) {
+    const day = Number(match[1]);
+    const monthName = match[2].toLowerCase();
+    const year = Number(match[3]);
+
+    const month = ID_MONTH_MAP[monthName];
+    if (month !== undefined) {
+      return new Date(year, month, day);
+    }
+  }
+
+  return null;
+};
+
+export const formatBackendDateToID = (value?: string): string => {
+  const date = parseBackendDate(value);
+  if (!date) return "-";
+
+  return date.toLocaleDateString("id-ID", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+};

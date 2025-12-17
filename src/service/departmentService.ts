@@ -1,4 +1,5 @@
 // service/departmentService.ts
+import { authHeader } from "../api/auth.api";
 import api from "../config/axios";
 
 export interface DepartmentRequest {
@@ -16,60 +17,70 @@ export interface DataDepartment {
   data: DepartmentPayload[];
 }
 
-const authHeader = () => {
-  const token = localStorage.getItem("token");
-  if (!token) return { headers: {} };
+// ====================================
 
-  return {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  };
-};
+class DepartmentService {
+  private base = "/department";
 
-// FIXED: name function harus lowercase
-export const dataDepartment = async (): Promise<DataDepartment> => {
-  const res = await api.get("/department/data", {
-    ...authHeader(),
-  });
+  /**
+   * GET /department/data
+   */
+  async getDepartmentData(): Promise<DataDepartment> {
+    const res = await api.get(`${this.base}/data`, {
+      headers: authHeader(),
+    });
 
-  const raw = res.data.data;
+    const raw = res.data.data;
 
-  return {
-    count: res.data.count ?? raw.length,
-    data: raw.rows ?? raw,
-  };
-};
+    return {
+      count: res.data.count ?? (raw.rows?.length ?? raw.length),
+      data: raw.rows ?? raw,
+    };
+  }
 
-export const createDepartment = async (
-  payload: DepartmentRequest
-): Promise<DepartmentPayload> => {
-  const res = await api.post<DepartmentPayload>(
-    "/department/create",
-    payload,
-    authHeader()
-  );
-  return res.data;
-};
+  /**
+   * POST /department/create
+   */
+  async createDepartment(
+    payload: DepartmentRequest
+  ): Promise<DepartmentPayload> {
+    const res = await api.post(`${this.base}/create`, payload, {
+      headers: authHeader(),
+    });
+    return res.data;
+  }
 
-export const updateDepartment = async (
-  departmentId: string,
-  payload: DepartmentRequest
-): Promise<DepartmentPayload> => {
-  const res = await api.put<DepartmentPayload>(
-    `/department/update/${departmentId}`,
-    payload,
-    authHeader()
-  );
-  return res.data;
-};
+  /**
+   * PUT /department/update/:id
+   */
+  async updateDepartment(
+    departmentId: string,
+    payload: DepartmentRequest
+  ): Promise<DepartmentPayload> {
+    const res = await api.put(
+      `${this.base}/update/${departmentId}`,
+      payload,
+      {
+        headers: authHeader(),
+      }
+    );
+    return res.data;
+  }
 
-export const deleteDepartment = async (
-  departmentId: string
-): Promise<{ id: string }> => {
-  const res = await api.delete<{ id: string }>(
-    `/department/delete/${departmentId}`,
-    authHeader()
-  );
-  return res.data;
-};
+  /**
+   * DELETE /department/delete/:id
+   */
+  async deleteDepartment(
+    departmentId: string
+  ): Promise<{ id: string }> {
+    const res = await api.delete(
+      `${this.base}/delete/${departmentId}`,
+      {
+        headers: authHeader(),
+      }
+    );
+    return res.data;
+  }
+}
+
+export default new DepartmentService();

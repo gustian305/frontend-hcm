@@ -21,7 +21,6 @@ export interface WorkDaySimple {
 
 export interface ShiftInfo {
   id: string;
-  companyProfileId: string;
   shiftName: string;
   workDays: WorkDaySimple[];
   dateStart: string;
@@ -31,9 +30,6 @@ export interface ShiftInfo {
 
   isNightShift: boolean;
   isActive: boolean;
-
-  createdAt: string;
-  updatedAt: string;
 }
 
 export interface DataShift {

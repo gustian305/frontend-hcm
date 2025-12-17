@@ -28,6 +28,7 @@ export interface AssignShiftInfo {
   employeePicture: string;
 
   shiftName: string;
+  idCardNumber: string;
 
   isActive: boolean;
 

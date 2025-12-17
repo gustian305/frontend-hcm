@@ -11,6 +11,7 @@ import jobVacancyReducer from "./slices/jobVacancySlice";
 import workPlanTaskReducer from "./slices/workPlanTaskSlice";
 import attendanceRuleReducer from "./slices/attendanceRuleSlice";
 import assignShiftReducer from "./slices/assignShiftSlice";
+import applicantReducer from "./slices/applicantSlice";
 
 export const store = configureStore({
   reducer: {
@@ -26,6 +27,7 @@ export const store = configureStore({
     workLeave: workLeaveReducer,
     jobVacancy: jobVacancyReducer,
     workPlanTask: workPlanTaskReducer,
+    applicant: applicantReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

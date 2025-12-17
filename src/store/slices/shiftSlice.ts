@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import shiftService, {
+import ShiftService, {
   DataShift,
   ShiftInfo,
   ShiftRequest,
@@ -7,14 +7,11 @@ import shiftService, {
   WorkDaySimple,
 } from "../../service/shiftService";
 
-// ==============================
-// THUNKS
-// ==============================
 export const fetchWorkDays = createAsyncThunk<WorkDayData>(
   "shift/fetchWorkDays",
   async (_, { rejectWithValue }) => {
     try {
-      return await shiftService.getWorkDay();
+      return await ShiftService.getWorkDay();
     } catch (err: any) {
       return rejectWithValue(err.response?.data || err.message);
     }
@@ -25,8 +22,9 @@ export const fetchShifts = createAsyncThunk<DataShift>(
   "shift/fetchShifts",
   async (_, { rejectWithValue }) => {
     try {
-      return await shiftService.getShiftData();
+      return await ShiftService.getShiftData();
     } catch (err: any) {
+
       return rejectWithValue(err.response?.data || err.message);
     }
   }
@@ -36,7 +34,7 @@ export const createShift = createAsyncThunk<ShiftInfo, ShiftRequest>(
   "shift/createShift",
   async (payload, { rejectWithValue }) => {
     try {
-      return await shiftService.createShift(payload);
+      return await ShiftService.createShift(payload);
     } catch (err: any) {
       return rejectWithValue(err.response?.data || err.message);
     }
@@ -47,16 +45,12 @@ export const deleteShift = createAsyncThunk<{ message: string }, string>(
   "shift/deleteShift",
   async (id, { rejectWithValue }) => {
     try {
-      return await shiftService.deleteShift(id);
+      return await ShiftService.deleteShift(id);
     } catch (err: any) {
       return rejectWithValue(err.response?.data || err.message);
     }
   }
 );
-
-// ==============================
-// STATE INTERFACE
-// ==============================
 
 export interface ShiftState {
   data: ShiftInfo[];
@@ -82,37 +76,27 @@ const initialState: ShiftState = {
   error: null,
 };
 
-// ==============================
-// SLICE
-// ==============================
-
 const shiftSlice = createSlice({
   name: "shift",
   initialState,
   reducers: {},
 
   extraReducers: (builder) => {
-    // FETCH WORK DAYS
     builder.addCase(fetchWorkDays.pending, (state) => {
       state.loading = true;
       state.error = null;
     });
-
     builder.addCase(fetchWorkDays.fulfilled, (state, action) => {
-            state.loading = false;
+      state.loading = false;
 
-      // action.payload = WorkDayData
-      state.workDays = action.payload.data; // array WorkDaySimple
-      state.count = action.payload.count;   // jumlah workDays
+      state.workDays = action.payload.data;
+      state.count = action.payload.count;
     });
-
-
     builder.addCase(fetchWorkDays.rejected, (state, action) => {
       state.loading = false;
       state.error = action.payload as string;
     });
 
-    // FETCH
     builder.addCase(fetchShifts.pending, (state) => {
       state.loading = true;
       state.error = null;
@@ -127,7 +111,6 @@ const shiftSlice = createSlice({
       state.error = action.payload as string;
     });
 
-    // CREATE
     builder.addCase(createShift.pending, (state) => {
       state.creating = true;
       state.error = null;
@@ -142,7 +125,6 @@ const shiftSlice = createSlice({
       state.error = action.payload as string;
     });
 
-    // DELETE
     builder.addCase(deleteShift.pending, (state) => {
       state.deleting = true;
       state.error = null;
@@ -150,7 +132,6 @@ const shiftSlice = createSlice({
     builder.addCase(deleteShift.fulfilled, (state, action) => {
       state.deleting = false;
 
-      // delete shift by id (state update)
       const deletedId = action.meta.arg;
       state.data = state.data.filter((s) => s.id !== deletedId);
       state.count = state.data.length;

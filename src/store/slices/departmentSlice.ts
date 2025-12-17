@@ -1,13 +1,13 @@
 // redux/slices/departmentSlice.ts
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
-import * as departmentService from "../../service/departmentService";
+import departmentService, { DataDepartment, DepartmentPayload, DepartmentRequest } from "../../service/departmentService";
 
 // === THUNKS ===
 export const fetchDepartment = createAsyncThunk(
   "department/fetchDepartment",
   async (_, { rejectWithValue }) => {
     try {
-      const data = await departmentService.dataDepartment();
+      const data = await departmentService.getDepartmentData();
       return data;
     } catch (err: any) {
       return rejectWithValue(err.response?.data || err.message);
@@ -17,7 +17,7 @@ export const fetchDepartment = createAsyncThunk(
 
 export const createDepartment = createAsyncThunk(
   "department/createDepartment",
-  async (payload: departmentService.DepartmentRequest, { rejectWithValue }) => {
+  async (payload: DepartmentRequest, { rejectWithValue }) => {
     try {
       return await departmentService.createDepartment(payload);
     } catch (err: any) {
@@ -32,7 +32,7 @@ export const updateDepartment = createAsyncThunk(
     {
       departmentId,
       payload,
-    }: { departmentId: string; payload: departmentService.DepartmentRequest },
+    }: { departmentId: string; payload: DepartmentRequest },
     { rejectWithValue }
   ) => {
     try {
@@ -57,7 +57,7 @@ export const deleteDepartment = createAsyncThunk(
 // === STATE ===
 
 interface DepartmentState {
-  departmentData: departmentService.DataDepartment | null;
+  departmentData: DataDepartment | null;
   loading: boolean;
   error: string | null;
 }
@@ -89,7 +89,7 @@ const departmentSlice = createSlice({
       })
       .addCase(
         fetchDepartment.fulfilled,
-        (state, action: PayloadAction<departmentService.DataDepartment>) => {
+        (state, action: PayloadAction<DataDepartment>) => {
           state.loading = false;
           state.departmentData = action.payload;
         }
@@ -107,7 +107,7 @@ const departmentSlice = createSlice({
       })
       .addCase(
         createDepartment.fulfilled,
-        (state, action: PayloadAction<departmentService.DepartmentPayload>) => {
+        (state, action: PayloadAction<DepartmentPayload>) => {
           state.loading = false;
           if (state.departmentData) {
             state.departmentData.data.push(action.payload);
@@ -128,7 +128,7 @@ const departmentSlice = createSlice({
       })
       .addCase(
         updateDepartment.fulfilled,
-        (state, action: PayloadAction<departmentService.DepartmentPayload>) => {
+        (state, action: PayloadAction<DepartmentPayload>) => {
           state.loading = false;
 
           if (state.departmentData) {
@@ -158,7 +158,7 @@ const departmentSlice = createSlice({
         (
           state,
           action: PayloadAction<
-            { id?: string } | departmentService.DepartmentPayload | void
+            { id?: string } | DepartmentPayload | void
           >
         ) => {
           state.loading = false;

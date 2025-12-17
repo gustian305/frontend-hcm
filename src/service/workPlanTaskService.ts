@@ -88,47 +88,46 @@ const authHeader = () => {
   };
 };
 
-export class WorkPlanTaskService {
+class WorkPlanTaskService {
   // ============================================
   // WORK PLAN SERVICE
   // ============================================
+  private base = "/work-plan";
+  private taskBase = "/task";
 
   // GET /work-plan/data
-static async getAllWorkPlans(): Promise<DataWorkPlan> {
-  const res = await api.get("/work-plan/data", authHeader());
+  async getAllWorkPlans(): Promise<DataWorkPlan> {
+    const res = await api.get(`${this.base}/data`, authHeader());
 
-  // mapping sekaligus fallback
-  const mapped = res.data.data.map((wp: any) => ({
-    ...wp,
-    department: wp.department || null,
-    position: wp.position || null,
-    tasks: wp.tasks || [],
-    periodStart: wp.periodStart || wp.startDate,
-    periodEnd: wp.periodEnd || wp.endDate,
-  }));
+    // mapping sekaligus fallback
+    const mapped = res.data.data.map((wp: any) => ({
+      ...wp,
+      department: wp.department || null,
+      position: wp.position || null,
+      tasks: wp.tasks || [],
+      periodStart: wp.periodStart || wp.startDate,
+      periodEnd: wp.periodEnd || wp.endDate,
+    }));
 
-  const finalResult: DataWorkPlan = {
-    count: res.data.count ?? mapped.length,
-    data: mapped,
-  };
+    const finalResult: DataWorkPlan = {
+      count: res.data.count ?? mapped.length,
+      data: mapped,
+    };
 
-  return finalResult;
-}
-
+    return finalResult;
+  }
 
   // GET /work-plan/details/:work_plan_id
-  static async detailWorkPlan(workPlanId: string): Promise<WorkPlanPayload> {
+  async detailWorkPlan(workPlanId: string): Promise<WorkPlanPayload> {
     const response = await api.get<WorkPlanPayload>(
-      `work-plan/details/${workPlanId}`,
+      `${this.base}/details/${workPlanId}`,
       authHeader()
     );
     return response.data;
   }
 
   // POST /work-plan/create
-  static async createWorkPlan(
-    payload: WorkPlanRequest
-  ): Promise<WorkPlanPayload> {
+  async createWorkPlan(payload: WorkPlanRequest): Promise<WorkPlanPayload> {
     const formatted = {
       ...payload,
       startDate: payload.startDate ? ToISO(payload.startDate) : null,
@@ -136,7 +135,7 @@ static async getAllWorkPlans(): Promise<DataWorkPlan> {
     };
 
     const response = await api.post<WorkPlanPayload>(
-      "work-plan/create",
+      `${this.base}/create`,
       formatted,
       authHeader()
     );
@@ -145,7 +144,7 @@ static async getAllWorkPlans(): Promise<DataWorkPlan> {
   }
 
   // PUT /work-plan/update/:work_plan_id
-  static async updateWorkPlan(
+  async updateWorkPlan(
     workPlanId: string,
     payload: WorkPlanRequest
   ): Promise<WorkPlanPayload> {
@@ -156,7 +155,7 @@ static async getAllWorkPlans(): Promise<DataWorkPlan> {
     };
 
     const response = await api.put<WorkPlanPayload>(
-      `work-plan/update/${workPlanId}`,
+      `${this.base}/update/${workPlanId}`,
       formatted,
       authHeader()
     );
@@ -165,11 +164,9 @@ static async getAllWorkPlans(): Promise<DataWorkPlan> {
   }
 
   // DELETE /work-plan/delete/:work_plan_id
-  static async deleteWorkPlan(
-    workPlanId: string
-  ): Promise<{ message: string }> {
+  async deleteWorkPlan(workPlanId: string): Promise<{ message: string }> {
     const response = await api.delete<{ message: string }>(
-      `work-plan/delete/${workPlanId}`,
+      `${this.base}/delete/${workPlanId}`,
       authHeader()
     );
     return response.data;
@@ -180,28 +177,28 @@ static async getAllWorkPlans(): Promise<DataWorkPlan> {
   // ============================================
 
   // GET /task/data/:work_plan_id
-  static async getTasks(workPlanId: string): Promise<DataWorkTask> {
+  async getTasks(workPlanId: string): Promise<DataWorkTask> {
     const response = await api.get<DataWorkTask>(
-      `task/data/${workPlanId}`,
+      `${this.taskBase}/data/${workPlanId}`,
       authHeader()
     );
     return response.data;
   }
 
   // GET /task/details/:work_plan_id/:task_id
-  static async detailTask(
+  async detailTask(
     workPlanId: string,
     taskId: string
   ): Promise<WorkTaskPayload> {
     const response = await api.get<WorkTaskPayload>(
-      `task/details/${workPlanId}/${taskId}`,
+      `${this.taskBase}/details/${workPlanId}/${taskId}`,
       authHeader()
     );
     return response.data;
   }
 
   // POST /task/create/:work_plan_id
-  static async createTask(
+  async createTask(
     workPlanId: string,
     payload: WorkTaskRequest
   ): Promise<WorkTaskPayload> {
@@ -212,7 +209,7 @@ static async getAllWorkPlans(): Promise<DataWorkPlan> {
     };
 
     const response = await api.post<WorkTaskPayload>(
-      `task/create/${workPlanId}`,
+      `${this.taskBase}/create/${workPlanId}`,
       formatted,
       authHeader()
     );
@@ -221,7 +218,7 @@ static async getAllWorkPlans(): Promise<DataWorkPlan> {
   }
 
   // PUT /task/update/:work_plan_id/:task_id
-  static async updateTask(
+  async updateTask(
     workPlanId: string,
     taskId: string,
     payload: WorkTaskRequest
@@ -233,7 +230,7 @@ static async getAllWorkPlans(): Promise<DataWorkPlan> {
     };
 
     const response = await api.put<WorkTaskPayload>(
-      `task/update/${workPlanId}/${taskId}`,
+      `${this.taskBase}/update/${workPlanId}/${taskId}`,
       formatted,
       authHeader()
     );
@@ -242,14 +239,16 @@ static async getAllWorkPlans(): Promise<DataWorkPlan> {
   }
 
   // DELETE /task/delete/:work_plan_id/:task_id
-  static async deleteTask(
+  async deleteTask(
     workPlanId: string,
     taskId: string
   ): Promise<{ message: string }> {
     const response = await api.delete<{ message: string }>(
-      `task/delete/${workPlanId}/${taskId}`,
+      `${this.taskBase}/delete/${workPlanId}/${taskId}`,
       authHeader()
     );
     return response.data;
   }
 }
+
+export default new WorkPlanTaskService();

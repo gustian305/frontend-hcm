@@ -23,6 +23,7 @@ interface AuthState {
   userInfo?: {
     id: string;
     employeeId?: string;
+    shiftId?: string;
     name: string;
     email?: string;
     role?: string;

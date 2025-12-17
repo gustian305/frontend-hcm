@@ -1,10 +1,9 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import {
+import WorkPlanTaskService, {
   DataWorkPlan,
   DataWorkTask,
   WorkPlanPayload,
   WorkPlanRequest,
-  WorkPlanTaskService,
   WorkTaskPayload,
   WorkTaskRequest,
 } from "../../service/workPlanTaskService";
@@ -58,17 +57,17 @@ export const updateWorkPlan = createAsyncThunk<
   }
 });
 
-export const deleteWorkPlan = createAsyncThunk<{ message: string; id: string }, string>(
-  "workPlan/delete",
-  async (id, { rejectWithValue }) => {
-    try {
-      await WorkPlanTaskService.deleteWorkPlan(id);
-      return { message: "success", id }; // passing id supaya reducer bisa hapus
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data || error.message);
-    }
+export const deleteWorkPlan = createAsyncThunk<
+  { message: string; id: string },
+  string
+>("workPlan/delete", async (id, { rejectWithValue }) => {
+  try {
+    await WorkPlanTaskService.deleteWorkPlan(id);
+    return { message: "success", id }; // passing id supaya reducer bisa hapus
+  } catch (error: any) {
+    return rejectWithValue(error.response?.data || error.message);
   }
-);
+});
 
 // 🔹 WORK TASK
 export const getTasks = createAsyncThunk<DataWorkTask, string>(
@@ -107,13 +106,16 @@ export const createTask = createAsyncThunk<
 export const updateTask = createAsyncThunk<
   WorkTaskPayload,
   { workPlanId: string; taskId: string; payload: WorkTaskRequest }
->("workTask/update", async ({ workPlanId, taskId, payload }, { rejectWithValue }) => {
-  try {
-    return await WorkPlanTaskService.updateTask(workPlanId, taskId, payload);
-  } catch (error: any) {
-    return rejectWithValue(error.response?.data || error.message);
+>(
+  "workTask/update",
+  async ({ workPlanId, taskId, payload }, { rejectWithValue }) => {
+    try {
+      return await WorkPlanTaskService.updateTask(workPlanId, taskId, payload);
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
   }
-});
+);
 
 export const deleteTask = createAsyncThunk<
   { message: string; id: string },

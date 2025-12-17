@@ -18,17 +18,25 @@ import AttendanceManagementPage from "../pages/dashboard/AttendanceManagement";
 import WorkLeavePage from "../pages/dashboard/WorkLeave";
 import WorkLeaveManagementPage from "../pages/dashboard/WorkLeaveManagement";
 import JobVacancyPage from "../pages/dashboard/JobVacancy";
-import JobPage from "../pages/landing/Job";
+
 import WorkPlanDetailPage from "../pages/dashboard/workPlanDetail";
 import SettingAttendancePage from "../pages/dashboard/SettingAttendanceRule";
 import Setting from "../pages/dashboard/Settings";
+import RecruitmentPublicPage from "../pages/landing/RecrutmentPage";
+import PricingPage from "../pages/landing/PricingPage";
+import ResourcesPage from "../pages/landing/ResourcesPage";
+import FeaturesPage from "../pages/landing/FeaturesPage";
+import ApplicantManagementPage from "../pages/dashboard/Applicant";
 
 const AppRoutes = () => {
   return (
     <Routes>
       {/* ==================== LANDING PAGE ==================== */}
       <Route path="/" element={<LandingPage />} />
-      <Route path="/job" element={<JobPage />} />
+      <Route path="features" element={<FeaturesPage />} />
+      <Route path="resources" element={<ResourcesPage />} />
+      <Route path="pricing" element={<PricingPage />} />
+      <Route path="recruitment" element={<RecruitmentPublicPage />} />
       {/* ======================== AUTH ======================== */}
       <Route path="/login" element={<LoginPage />} />
 
@@ -71,6 +79,7 @@ const AppRoutes = () => {
           element={<WorkLeaveManagementPage />}
         />
         <Route path="/job-vacancy" element={<JobVacancyPage />} />
+        <Route path="/applicant-management" element={<ApplicantManagementPage />} />
 
         <Route path="/work-plan/:workPlanId" element={<WorkPlanDetailPage />} />
       </Route>

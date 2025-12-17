@@ -1,12 +1,17 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
-import * as employeeService from "../../service/employeeService";
+import employeeService, {
+  DataEmployee,
+  EmployeeDetailResponse,
+  EmployeePayload,
+  EmployeeRequest,
+} from "../../service/employeeService";
 
 // === THUNKS ===
 export const fetchEmployee = createAsyncThunk(
   "employee/fetchEmployee",
   async (_, { rejectWithValue }) => {
     try {
-      const data = await employeeService.dataEmployee();
+      const data = await employeeService.getEmployeeData();
       return data;
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || err.message);
@@ -18,7 +23,7 @@ export const fetchEmployeeDetail = createAsyncThunk(
   "employee/fetchEmployeeDetail",
   async (employeeId: string, { rejectWithValue }) => {
     try {
-      const data = await employeeService.detailEmployee(employeeId);
+      const data = await employeeService.getEmployeeDetail(employeeId);
       return data;
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || err.message);
@@ -28,7 +33,7 @@ export const fetchEmployeeDetail = createAsyncThunk(
 
 export const createEmployee = createAsyncThunk(
   "employee/createEmployee",
-  async (payload: employeeService.EmployeeRequest, { rejectWithValue }) => {
+  async (payload: EmployeeRequest, { rejectWithValue }) => {
     try {
       const data = await employeeService.createEmployee(payload);
       return data;
@@ -41,10 +46,7 @@ export const createEmployee = createAsyncThunk(
 export const updateEmployee = createAsyncThunk(
   "employee/updateEmployee",
   async (
-    {
-      employeeId,
-      payload,
-    }: { employeeId: string; payload: employeeService.EmployeeRequest },
+    { employeeId, payload }: { employeeId: string; payload: EmployeeRequest },
     { rejectWithValue }
   ) => {
     try {
@@ -70,8 +72,8 @@ export const deleteEmployee = createAsyncThunk(
 
 // === STATE ===
 interface EmployeeState {
-  employeeData: employeeService.DataEmployee | null;
-  employeeDetail: employeeService.EmployeeDetailResponse | null;
+  employeeData: DataEmployee | null;
+  employeeDetail: EmployeeDetailResponse | null;
   loading: boolean;
   detailLoading: boolean;
   createLoading: boolean;
@@ -83,11 +85,11 @@ interface EmployeeState {
 const initialState: EmployeeState = {
   employeeData: null,
   employeeDetail: null,
-  loading: false,        // Untuk fetch list
-  detailLoading: false,  // Untuk fetch detail
-  createLoading: false,  // Untuk create
-  updateLoading: false,  // Untuk update
-  deleteLoading: false,  // Untuk delete
+  loading: false, // Untuk fetch list
+  detailLoading: false, // Untuk fetch detail
+  createLoading: false, // Untuk create
+  updateLoading: false, // Untuk update
+  deleteLoading: false, // Untuk delete
   error: null,
 };
 
@@ -103,9 +105,12 @@ const employeeSlice = createSlice({
       state.error = null;
     },
     clearEmployeeState: () => initialState,
-    
+
     // Set employee detail langsung (untuk setelah create)
-    setEmployeeDetail: (state, action: PayloadAction<employeeService.EmployeeDetailResponse>) => {
+    setEmployeeDetail: (
+      state,
+      action: PayloadAction<EmployeeDetailResponse>
+    ) => {
       state.employeeDetail = action.payload;
     },
   },
@@ -135,7 +140,7 @@ const employeeSlice = createSlice({
         fetchEmployeeDetail.fulfilled,
         (
           state,
-          action: PayloadAction<employeeService.EmployeeDetailResponse>
+          action: PayloadAction<EmployeeDetailResponse>
         ) => {
           state.detailLoading = false;
           state.employeeDetail = action.payload;
@@ -154,19 +159,14 @@ const employeeSlice = createSlice({
       })
       .addCase(
         createEmployee.fulfilled,
-        (state, action: PayloadAction<employeeService.EmployeePayload>) => {
+        (state, action: PayloadAction<EmployeePayload>) => {
           state.createLoading = false;
-          
+
           // Update list data
           if (state.employeeData) {
             state.employeeData.data.push(action.payload);
             state.employeeData.count++;
           }
-          
-          // NOTE: Response create biasanya hanya basic data, 
-          // jadi kita perlu fetch detail terpisah untuk mendapatkan relations
-          console.log('Employee created:', action.payload);
-          console.log('Note: Need to fetch detail separately for relations data');
         }
       )
       .addCase(createEmployee.rejected, (state, action) => {
@@ -182,9 +182,9 @@ const employeeSlice = createSlice({
       })
       .addCase(
         updateEmployee.fulfilled,
-        (state, action: PayloadAction<employeeService.EmployeePayload>) => {
+        (state, action: PayloadAction<EmployeePayload>) => {
           state.updateLoading = false;
-          
+
           // Update list data
           if (state.employeeData) {
             const index = state.employeeData.data.findIndex(
@@ -194,11 +194,13 @@ const employeeSlice = createSlice({
               state.employeeData.data[index] = action.payload;
             }
           }
-          
+
           // Update detail jika sedang dilihat
           if (state.employeeDetail?.id === action.payload.id) {
             // Kita perlu fetch detail lagi untuk mendapatkan data relations yang update
-            console.log('Employee updated, need to refetch detail for relations');
+            console.log(
+              "Employee updated, need to refetch detail for relations"
+            );
           }
         }
       )
@@ -215,7 +217,7 @@ const employeeSlice = createSlice({
       })
       .addCase(deleteEmployee.fulfilled, (state, action) => {
         state.deleteLoading = false;
-        
+
         // Hapus dari list
         if (state.employeeData) {
           state.employeeData.data = state.employeeData.data.filter(
@@ -226,7 +228,7 @@ const employeeSlice = createSlice({
             (state.employeeData.count || 0) - 1
           );
         }
-        
+
         // Clear detail jika yang dihapus sedang dilihat
         if (state.employeeDetail?.id === action.meta.arg) {
           state.employeeDetail = null;
@@ -239,11 +241,11 @@ const employeeSlice = createSlice({
   },
 });
 
-export const { 
-  clearEmployeeDetail, 
-  clearEmployeeError, 
+export const {
+  clearEmployeeDetail,
+  clearEmployeeError,
   clearEmployeeState,
-  setEmployeeDetail 
+  setEmployeeDetail,
 } = employeeSlice.actions;
 
 export default employeeSlice.reducer;

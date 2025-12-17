@@ -1,14 +1,8 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import {
-  createRolePermission,
-  deleteRolePermission,
-  permissionsData,
-  roleDetail,
+import RolePermissionService, {
   PermissionInfo,
   RolePermissionPayload,
   RolePermissionRequest,
-  updateRolePermission,
-  roleData,
 } from "../../service/rolePermissionService";
 
 // =====================================================
@@ -17,7 +11,7 @@ import {
 export const fetchPermissions = createAsyncThunk<PermissionInfo[]>(
   "rolePermission/fetchPermissions",
   async () => {
-    const data = await permissionsData();
+    const data = await RolePermissionService.dataPermissions();
     return data;
   }
 );
@@ -30,7 +24,7 @@ export const fetchRolePermissions = createAsyncThunk<{
   data: RolePermissionPayload[];
   count: number;
 }>("rolePermission/fetchRolePermissions", async () => {
-  const response = await roleData();
+  const response = await RolePermissionService.getAllDataRolePermission();
 
   return response;
 });
@@ -41,7 +35,7 @@ export const fetchRolePermissions = createAsyncThunk<{
 export const fetchRoleDetail = createAsyncThunk<RolePermissionPayload, string>(
   "rolePermission/fetchRoleDetail",
   async (id) => {
-    const detail = await roleDetail(id);
+    const detail = await RolePermissionService.detailrolePermission(id);
 
 
     detail.permissions.forEach((p) => console.log("DETAIL PERMISSION:", p.id));
@@ -57,7 +51,7 @@ export const createRole = createAsyncThunk<
   RolePermissionPayload,
   RolePermissionRequest
 >("rolePermission/createRole", async (payload) => {
-  const res = await createRolePermission(payload);
+  const res = await RolePermissionService.createRolePermission(payload);
 
 
   return res;
@@ -70,7 +64,7 @@ export const updateRole = createAsyncThunk<
   RolePermissionPayload,
   { id: string; data: RolePermissionRequest }
 >("rolePermission/updateRole", async ({ id, data }) => {
-  const updated = await updateRolePermission(id, data);
+  const updated = await RolePermissionService.updateRolePermission(id, data);
 
   return updated;
 });
@@ -81,7 +75,7 @@ export const updateRole = createAsyncThunk<
 export const deleteRoleAction = createAsyncThunk<{ id: string }, string>(
   "rolePermission/deleteRole",
   async (id) => {
-    const res = await deleteRolePermission(id);
+    const res = await RolePermissionService.deleteRolePermission(id);
     return res;
   }
 );

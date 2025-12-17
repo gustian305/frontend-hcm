@@ -1,19 +1,39 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { AttendanceInfo, AttendanceRequest, createAttendance, DataAttendance, getAttendanceData, getAttendanceHistory } from "../../service/attendanceService";
+import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
+import AttendanceService, {
+  AttendanceInfo,
+  AttendanceRequest,
+  DataAttendance,
+  GetEmployeeShiftResponse,
+} from "../../service/attendanceService";
 
 // =========================
 // Thunks
 // =========================
 
+// GET EMPLOYEE ACTIVE SHIFT
+export const fetchEmployeeActiveShift = createAsyncThunk<
+  GetEmployeeShiftResponse,
+  void,
+  { rejectValue: string }
+>("attendance/fetchEmployeeActiveShift", async (_, { rejectWithValue }) => {
+  try {
+    const res = await AttendanceService.getEmployeeActiveShift();
+    return res;
+  } catch (err: any) {
+    return rejectWithValue(
+      err?.response?.data?.message || "Gagal mengambil active shift"
+    );
+  }
+});
 
 // CREATE ATTENDANCE (check-in / check-out)
-export const createAttendanceThunk = createAsyncThunk<
+export const attendanceCheckInThunk = createAsyncThunk<
   AttendanceInfo,
   AttendanceRequest,
   { rejectValue: string }
->("attendance/create", async (payload, { rejectWithValue }) => {
+>("attendance/check-in", async (payload, { rejectWithValue }) => {
   try {
-    return await createAttendance(payload);
+    return await AttendanceService.attendanceCheckIn(payload);
   } catch (err: any) {
     return rejectWithValue(
       err.response?.data?.message || "Failed to create attendance"
@@ -21,20 +41,35 @@ export const createAttendanceThunk = createAsyncThunk<
   }
 });
 
-// GET HISTORY PER EMPLOYEE
+// CREATE ATTENDANCE (check-in / check-out)
+export const attendanceCheckOutThunk = createAsyncThunk<
+  AttendanceInfo,
+  AttendanceRequest,
+  { rejectValue: string }
+>("attendance/check-out", async (payload, { rejectWithValue }) => {
+  try {
+    return await AttendanceService.attendanceCheckOut(payload);
+  } catch (err: any) {
+    return rejectWithValue(
+      err.response?.data?.message || "Failed to create attendance"
+    );
+  }
+});
+
 export const getAttendanceHistoryThunk = createAsyncThunk<
   DataAttendance,
-  string,
+  string, // <- terima string saja
   { rejectValue: string }
 >("attendance/history", async (employeeId, { rejectWithValue }) => {
   try {
-    return await getAttendanceHistory(employeeId);
+    return await AttendanceService.getAttendanceHistory(employeeId);
   } catch (err: any) {
     return rejectWithValue(
       err.response?.data?.message || "Failed to load history"
     );
   }
 });
+
 
 // GET ALL ATTENDANCE (MANAGEMENT)
 export const getAttendanceDataThunk = createAsyncThunk<
@@ -43,7 +78,7 @@ export const getAttendanceDataThunk = createAsyncThunk<
   { rejectValue: string }
 >("attendance/data", async (_, { rejectWithValue }) => {
   try {
-    return await getAttendanceData();
+    return await AttendanceService.getAttendanceData();
   } catch (err: any) {
     return rejectWithValue(
       err.response?.data?.message || "Failed to load attendance data"
@@ -55,6 +90,7 @@ export const getAttendanceDataThunk = createAsyncThunk<
 // Slice State
 // =========================
 interface AttendanceState {
+  activeShift: GetEmployeeShiftResponse | null;
   history: DataAttendance | null;
   list: DataAttendance | null; // for management
   lastCreated: AttendanceInfo | null;
@@ -64,6 +100,7 @@ interface AttendanceState {
 }
 
 const initialState: AttendanceState = {
+  activeShift: null,
   history: null,
   list: null,
   lastCreated: null,
@@ -84,17 +121,50 @@ export const attendanceSlice = createSlice({
   },
 
   extraReducers: (builder) => {
-    // CREATE
     builder
-      .addCase(createAttendanceThunk.pending, (state) => {
+      // FETCH ACTIVE SHIFT
+      .addCase(fetchEmployeeActiveShift.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(createAttendanceThunk.fulfilled, (state, action) => {
+      .addCase(
+        fetchEmployeeActiveShift.fulfilled,
+        (state, action: PayloadAction<GetEmployeeShiftResponse>) => {
+          state.loading = false;
+          state.activeShift = action.payload;
+        }
+      )
+      .addCase(fetchEmployeeActiveShift.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload ?? "Terjadi kesalahan";
+      });
+
+    // Check-IN
+    builder
+      .addCase(attendanceCheckInThunk.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(attendanceCheckInThunk.fulfilled, (state, action) => {
         state.loading = false;
         state.lastCreated = action.payload;
       })
-      .addCase(createAttendanceThunk.rejected, (state, action) => {
+      .addCase(attendanceCheckInThunk.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Failed to create attendance";
+      });
+
+    // Check-OUT
+    builder
+      .addCase(attendanceCheckOutThunk.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(attendanceCheckOutThunk.fulfilled, (state, action) => {
+        state.loading = false;
+        state.lastCreated = action.payload;
+      })
+      .addCase(attendanceCheckOutThunk.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || "Failed to create attendance";
       });

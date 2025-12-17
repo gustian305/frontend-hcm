@@ -137,8 +137,11 @@ const ShiftPage: React.FC = () => {
     ? {
         shiftName: editingShift.shiftName,
         workDayIds: editingShift.workDays.map((d) => d.id),
-        dateStart: editingShift.dateStart,
-        dateEnd: editingShift.dateEnd,
+        dateStart: editingShift.dateStart
+          ? // Ambil hanya bagian tanggalnya
+            editingShift.dateStart.split(" ")[0]
+          : "",
+        dateEnd: editingShift.dateEnd ? editingShift.dateEnd.split(" ")[0] : "",
         shiftStartTime: editingShift.shiftStartTime,
         shiftEndTime: editingShift.shiftEndTime,
         isNightShift: editingShift.isNightShift,
@@ -149,8 +152,8 @@ const ShiftPage: React.FC = () => {
         workDayIds: [],
         dateStart: "",
         dateEnd: "",
-        shiftStartTime: "",
-        shiftEndTime: "",
+        shiftStartTime: "07:00",
+        shiftEndTime: "15:00",
         isNightShift: false,
         isActive: true,
       };
@@ -177,20 +180,21 @@ const ShiftPage: React.FC = () => {
     setAlert((prev) => ({ ...prev, open: false }));
   };
 
-  /**
-   * ==========================================
-   * HANDLE CREATE / UPDATE SHIFT
-   * ==========================================
-   */
   const handleSubmitShift = async (values: ShiftRequest) => {
     const payload = {
       ...values,
       shiftName: values.shiftName.trim(),
       shiftStartTime: values.shiftStartTime.trim(),
       shiftEndTime: values.shiftEndTime.trim(),
-      dateStart: values.dateStart.trim(),
-      dateEnd: values.dateEnd.trim(),
+      dateStart: values.dateStart,
+      dateEnd: values.dateEnd,
+      workDayIds:
+        values.workDayIds && values.workDayIds.length > 0
+          ? values.workDayIds
+          : [],
     };
+
+    console.log("📤 Submitting shift with payload:", payload);
 
     try {
       await dispatch(createShift(payload)).unwrap();
@@ -398,7 +402,7 @@ const ShiftPage: React.FC = () => {
           )}
         </ModalForm>
       )}
-      
+
       {assignOpen && (
         <AssignForm
           open={assignOpen}
@@ -424,6 +428,7 @@ const ShiftPage: React.FC = () => {
                         id: assignment.id,
                         employeeId: assignment.employeeId,
                         shiftId: assignment.shiftId,
+                        idCardNumber: assignment.idCardNumber,
                         employeeName: assignment.employeeName,
                         employeePicture: assignment.employeePicture,
                         shiftName: assignment.shiftName,

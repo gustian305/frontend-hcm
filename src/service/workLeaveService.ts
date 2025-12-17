@@ -46,16 +46,18 @@ export interface DataWorkLeave {
   data: WorkLeavePayload[];
 }
 
-export class WorkLeaveService {
-  static async getLeaveBalance(employeeId: string): Promise<LeaveBalanceInfo> {
+class WorkLeaveService {
+  private base = "work-leave";
+  private baseManagement = "work-leave-management";
+  async getLeaveBalance(employeeId: string): Promise<LeaveBalanceInfo> {
     const response = await api.get<LeaveBalanceInfo>(
-      `work-leave/leave-balance/${employeeId}`,
+      `${this.base}/leave-balance/${employeeId}`,
       authHeader()
     );
     return response.data;
   }
 
-  static async createWorkLeave(
+  async createWorkLeave(
     employeeId: string,
     payload: CreateWorkLeaveRequest
   ): Promise<WorkLeavePayload> {
@@ -72,7 +74,7 @@ export class WorkLeaveService {
     }
 
     const response = await api.post<WorkLeavePayload>(
-      `work-leave/${employeeId}/create`,
+      `${this.base}/${employeeId}/create`,
       formData,
       {
         ...authHeader(),
@@ -86,39 +88,41 @@ export class WorkLeaveService {
     return response.data;
   }
 
-  static async getWorkLeaveHistory(employeeId: string): Promise<DataWorkLeave> {
+  async getWorkLeaveHistory(employeeId: string): Promise<DataWorkLeave> {
     const response = await api.get<DataWorkLeave>(
-      `work-leave/history/${employeeId}`,
+      `${this.base}/history/${employeeId}`,
       authHeader()
     );
     return response.data;
   }
 
-  static async dataWorkLeave(): Promise<DataWorkLeave> {
+  async dataWorkLeave(): Promise<DataWorkLeave> {
     const response = await api.get<DataWorkLeave>(
-      "work-leave-management/data",
+      `${this.baseManagement}/data`,
       authHeader()
     );
     return response.data;
   }
 
-  static async approveOrReject(
+  async approveOrReject(
     workLeaveId: string,
     status: "approved" | "rejected"
   ): Promise<WorkLeavePayload> {
     const response = await api.put<WorkLeavePayload>(
-      `work-leave-management/approved/${workLeaveId}`,
+      `${this.baseManagement}/approved/${workLeaveId}`,
       { status },
       authHeader()
     );
     return response.data;
   }
 
-  static async detail(workLeaveId: string): Promise<WorkLeavePayload> {
+  async detail(workLeaveId: string): Promise<WorkLeavePayload> {
     const response = await api.get<WorkLeavePayload>(
-      `work-leave-management/detail/${workLeaveId}`,
+      `${this.baseManagement}/detail/${workLeaveId}`,
       authHeader()
     );
     return response.data;
   }
 }
+
+export default new WorkLeaveService();

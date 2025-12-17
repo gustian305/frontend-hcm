@@ -52,71 +52,117 @@ const mapRole = (d: any): RolePermissionPayload => ({
     : [],
 });
 
-export const permissionsData = async (): Promise<PermissionInfo[]> => {
-  const res = await api.get("/role-permission/data/permission", authHeader());
 
-  const mapped = res.data.data.flatMap((group: any) => {
-    if (!Array.isArray(group.permissions)) return [];
-    return group.permissions.map((p: any) => ({
-      id: p.id || p.ID,
-      name: p.name || p.Name,
-      action: p.action || p.Action,
-      resource: p.resource || p.Resource,
-    }));
-  });
+// Mapper untuk Role
+// const mapRole = (raw: any): RolePermissionPayload => ({
+//   id: raw.id,
+//   name: raw.name,
+//   description: raw.description ?? "",
+//   permissions: Array.isArray(raw.permissions)
+//     ? raw.permissions.map((p: any) => ({
+//         id: p.id,
+//         name: p.name,
+//         action: p.action,
+//         resource: p.resource,
+//       }))
+//     : [],
+// });
 
-  //   console.log("%c[permissionsData] RAW DATA:", "color:#60a5fa;", res.data.data);
-  //   console.log("%c[permissionsData] MAPPED:", "color:#34d399;", mapped);
+class RolePermissionService {
+  private base = "/role-permission";
 
-  return mapped;
-};
+  /**
+   * GET /role-permission/data/permission
+   */
+  async dataPermissions(): Promise<PermissionInfo[]> {
+    const response = await api.get(
+      `${this.base}/data/permission`,
+      authHeader()
+    );
 
-export const roleData = async (): Promise<{
-  data: RolePermissionPayload[];
-  count: number;
-}> => {
-  const res = await api.get("/role-permission/data", authHeader());
+    const list = response.data.data;
 
-  const rawData = res.data.data; // pastikan ini array
-  const mapped = Array.isArray(rawData) ? rawData.map(mapRole) : [];
+    return list.flatMap((group: any) => {
+      if (!Array.isArray(group.permissions)) return [];
+      return group.permissions.map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        action: p.action,
+        resource: p.resource,
+      }));
+    });
+  }
 
-  return {
-    data: mapped,
-    count: mapped.length,
-  };
-};
+  /**
+   * GET /role-permission/data
+   */
+  async getAllDataRolePermission(): Promise<{ data: RolePermissionPayload[]; count: number }> {
+    const response = await api.get(`${this.base}/data`, authHeader());
 
-export const roleDetail = async (
-  roleId: string
-): Promise<RolePermissionPayload> => {
-  const res = await api.get(`/role-permission/detail/${roleId}`, authHeader());
-  console.log("[roleDetail] API response raw:", res.data); 
-  return mapRole(res.data);
-};
+    const rawData = response.data.data;
+    const mapped = Array.isArray(rawData) ? rawData.map(mapRole) : [];
 
-export const createRolePermission = async (
-  payload: RolePermissionRequest
-): Promise<RolePermissionPayload> => {
-  const res = await api.post("/role-permission/create", payload, authHeader());
-  return mapRole(res.data.data);
-};
+    return {
+      data: mapped,
+      count: mapped.length,
+    };
+  }
 
-export const updateRolePermission = async (
-  roleId: string,
-  payload: RolePermissionRequest
-): Promise<RolePermissionPayload> => {
-  const res = await api.put(
-    `/role-permission/update/${roleId}`,
-    payload,
-    authHeader()
-  );
-  return mapRole(res.data.data);
-};
+  /**
+   * GET /role-permission/detail/:id
+   */
+  async detailrolePermission(roleId: string): Promise<RolePermissionPayload> {
+    const response = await api.get(
+      `${this.base}/detail/${roleId}`,
+      authHeader()
+    );
 
-export const deleteRolePermission = async (roleId: string): Promise<{ id: string }> => {
-  const res = await api.delete<{ id: string }>(
-    `/role-permission/delete/${roleId}`,
-    authHeader()
-  );
-  return res.data;
-};
+    return mapRole(response.data);
+  }
+
+  /**
+   * POST /role-permission/create
+   */
+  async createRolePermission(
+    payload: RolePermissionRequest
+  ): Promise<RolePermissionPayload> {
+    const response = await api.post(
+      `${this.base}/create`,
+      payload,
+      authHeader()
+    );
+
+    return mapRole(response.data.data);
+  }
+
+  /**
+   * PUT /role-permission/update/:id
+   */
+  async updateRolePermission(
+    roleId: string,
+    payload: RolePermissionRequest
+  ): Promise<RolePermissionPayload> {
+    const response = await api.put(
+      `${this.base}/update/${roleId}`,
+      payload,
+      authHeader()
+    );
+
+    return mapRole(response.data.data);
+  }
+
+  /**
+   * DELETE /role-permission/delete/:id
+   */
+  async deleteRolePermission(
+    roleId: string
+  ): Promise<{ id: string }> {
+    const response = await api.delete(
+      `${this.base}/delete/${roleId}`,
+      authHeader()
+    );
+    return response.data;
+  }
+}
+
+export default new RolePermissionService;

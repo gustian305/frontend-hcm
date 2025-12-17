@@ -13,6 +13,10 @@ import {
   Check,
 } from "lucide-react";
 import { AssignShiftInfo, SwitchShiftRequest } from "../../service/assignShift";
+import {
+  formatBackendDateToID,
+  parseBackendDate,
+} from "../../utils/dateTimeHelper";
 
 interface Props {
   shifts: ShiftInfo[];
@@ -51,7 +55,11 @@ const ShiftSection: React.FC<Props> = ({
 
   // Handle submit switch
   const handleSubmitSwitch = () => {
-    if (!selectedShift || !selectedToShiftId || selectedEmployeeIds.length === 0) {
+    if (
+      !selectedShift ||
+      !selectedToShiftId ||
+      selectedEmployeeIds.length === 0
+    ) {
       return;
     }
 
@@ -90,32 +98,41 @@ const ShiftSection: React.FC<Props> = ({
       .toUpperCase();
   };
 
-  // Format tanggal
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("id-ID", {
-      day: "numeric",
-      month: "short",
-      year: "numeric"
-    });
+  const renderWorkDays = (workDays?: { name: string }[]) => {
+    if (!workDays || workDays.length === 0) return "Tidak ada hari kerja";
+
+    return workDays.map((d) => d.name).join(", ");
   };
 
-  // Cek apakah shift aktif
   const isShiftActive = (shift: ShiftInfo) => {
-    const today = new Date();
-    const startDate = new Date(shift.dateStart);
-    const endDate = new Date(shift.dateEnd);
+    const now = new Date();
+
+    const start = parseBackendDate(shift.dateStart);
+    const end = parseBackendDate(shift.dateEnd);
+
+    if (!start || !end) return false;
+
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    const startDate = new Date(
+      start.getFullYear(),
+      start.getMonth(),
+      start.getDate()
+    );
+
+    const endDate = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+
     return today >= startDate && today <= endDate && shift.isActive;
   };
 
-  // Get employees for a specific shift
   const getEmployeesForShift = (shiftId: string) => {
-    return assignments.filter(a => a.shiftId === shiftId && a.isActive);
+    return assignments.filter((a) => a.shiftId === shiftId && a.isActive);
   };
 
-  // Get available target shifts (exclude current shift)
   const getAvailableTargetShifts = (currentShiftId: string) => {
-    return shifts.filter(shift => shift.id !== currentShiftId && shift.isActive);
+    return shifts.filter(
+      (shift) => shift.id !== currentShiftId && shift.isActive
+    );
   };
 
   return (
@@ -123,29 +140,34 @@ const ShiftSection: React.FC<Props> = ({
       {/* Switch Shift Modal */}
       {switchModalOpen && selectedShift && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-gray-800">Switch Shift</h2>
-                <button
-                  onClick={() => setSwitchModalOpen(false)}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  ✕
-                </button>
-              </div>
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+            {/* ================= HEADER (FIXED) ================= */}
+            <div className="p-6 border-b flex items-center justify-between">
+              <h2 className="text-xl font-bold text-gray-800">Switch Shift</h2>
+              <button
+                onClick={() => setSwitchModalOpen(false)}
+                className="text-gray-500 hover:text-gray-700 text-xl"
+              >
+                ✕
+              </button>
+            </div>
 
+            {/* ================= BODY (SCROLLABLE) ================= */}
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
               {/* Current Shift Info */}
               <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
                 <h3 className="font-medium text-blue-800 mb-2">Dari Shift:</h3>
+
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
                     <Sun className="w-5 h-5 text-blue-600" />
                   </div>
+
                   <div>
                     <h4 className="font-semibold">{selectedShift.shiftName}</h4>
                     <p className="text-sm text-gray-600">
-                      {selectedShift.shiftStartTime} - {selectedShift.shiftEndTime}
+                      {selectedShift.shiftStartTime} -{" "}
+                      {selectedShift.shiftEndTime}
                       {selectedShift.isNightShift && " (Night Shift)"}
                     </p>
                   </div>
@@ -157,7 +179,8 @@ const ShiftSection: React.FC<Props> = ({
                 <label className="block font-medium text-gray-700 mb-2">
                   Pilih Shift Tujuan
                 </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-60 overflow-y-auto p-2">
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-60 overflow-y-auto custom-scrollbar p-2">
                   {getAvailableTargetShifts(selectedShift.id).map((shift) => (
                     <div
                       key={shift.id}
@@ -169,25 +192,31 @@ const ShiftSection: React.FC<Props> = ({
                       onClick={() => setSelectedToShiftId(shift.id)}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="flex-shrink-0">
-                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                            shift.isNightShift ? "bg-indigo-100" : "bg-green-100"
-                          }`}>
-                            {shift.isNightShift ? (
-                              <Moon className="w-4 h-4 text-indigo-600" />
-                            ) : (
-                              <Sun className="w-4 h-4 text-green-600" />
-                            )}
-                          </div>
+                        <div
+                          className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                            shift.isNightShift
+                              ? "bg-indigo-100"
+                              : "bg-green-100"
+                          }`}
+                        >
+                          {shift.isNightShift ? (
+                            <Moon className="w-4 h-4 text-indigo-600" />
+                          ) : (
+                            <Sun className="w-4 h-4 text-green-600" />
+                          )}
                         </div>
+
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-medium truncate">{shift.shiftName}</h4>
+                          <h4 className="font-medium truncate">
+                            {shift.shiftName}
+                          </h4>
                           <p className="text-xs text-gray-500 truncate">
                             {shift.shiftStartTime} - {shift.shiftEndTime}
                           </p>
                         </div>
+
                         {selectedToShiftId === shift.id && (
-                          <Check className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                          <Check className="w-5 h-5 text-blue-600" />
                         )}
                       </div>
                     </div>
@@ -200,7 +229,8 @@ const ShiftSection: React.FC<Props> = ({
                 <label className="block font-medium text-gray-700 mb-2">
                   Pilih Karyawan yang Akan Dipindahkan
                 </label>
-                <div className="max-h-60 overflow-y-auto border border-gray-200 rounded-lg p-2">
+
+                <div className="max-h-60 overflow-y-auto custom-scrollbar border border-gray-200 rounded-lg p-2">
                   {getEmployeesForShift(selectedShift.id).map((emp) => (
                     <div
                       key={emp.employeeId}
@@ -210,10 +240,11 @@ const ShiftSection: React.FC<Props> = ({
                           : "hover:bg-gray-50"
                       }`}
                       onClick={() => {
-                        const newIds = selectedEmployeeIds.includes(emp.employeeId)
-                          ? selectedEmployeeIds.filter(id => id !== emp.employeeId)
-                          : [...selectedEmployeeIds, emp.employeeId];
-                        setSelectedEmployeeIds(newIds);
+                        setSelectedEmployeeIds((prev) =>
+                          prev.includes(emp.employeeId)
+                            ? prev.filter((id) => id !== emp.employeeId)
+                            : [...prev, emp.employeeId]
+                        );
                       }}
                     >
                       <div className="flex items-center gap-3">
@@ -232,12 +263,12 @@ const ShiftSection: React.FC<Props> = ({
                             {getInitials(emp.employeeName)}
                           </div>
                         )}
-                        <div>
-                          <h5 className="font-medium text-gray-900">
-                            {emp.employeeName}
-                          </h5>
-                        </div>
+
+                        <h5 className="font-medium text-gray-900">
+                          {emp.employeeName}
+                        </h5>
                       </div>
+
                       <input
                         type="checkbox"
                         checked={selectedEmployeeIds.includes(emp.employeeId)}
@@ -247,32 +278,36 @@ const ShiftSection: React.FC<Props> = ({
                     </div>
                   ))}
                 </div>
+
                 <p className="text-sm text-gray-500 mt-2">
                   {selectedEmployeeIds.length} karyawan dipilih
                 </p>
               </div>
+            </div>
 
-              {/* Action Buttons */}
-              <div className="flex justify-end gap-3 pt-4 border-t">
-                <button
-                  onClick={() => setSwitchModalOpen(false)}
-                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 font-medium"
-                >
-                  Batal
-                </button>
-                <button
-                  onClick={handleSubmitSwitch}
-                  disabled={!selectedToShiftId || selectedEmployeeIds.length === 0}
-                  className={`px-4 py-2 rounded-lg font-medium flex items-center gap-2 ${
-                    !selectedToShiftId || selectedEmployeeIds.length === 0
-                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      : "bg-blue-600 text-white hover:bg-blue-700"
-                  }`}
-                >
-                  <RefreshCw className="w-4 h-4" />
-                  Switch Shift
-                </button>
-              </div>
+            {/* ================= FOOTER (FIXED) ================= */}
+            <div className="p-4 border-t bg-white flex justify-end gap-3">
+              <button
+                onClick={() => setSwitchModalOpen(false)}
+                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 font-medium"
+              >
+                Batal
+              </button>
+
+              <button
+                onClick={handleSubmitSwitch}
+                disabled={
+                  !selectedToShiftId || selectedEmployeeIds.length === 0
+                }
+                className={`px-4 py-2 rounded-lg font-medium flex items-center gap-2 ${
+                  !selectedToShiftId || selectedEmployeeIds.length === 0
+                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    : "bg-blue-600 text-white hover:bg-blue-700"
+                }`}
+              >
+                <RefreshCw className="w-4 h-4" />
+                Switch Shift
+              </button>
             </div>
           </div>
         </div>
@@ -290,8 +325,8 @@ const ShiftSection: React.FC<Props> = ({
             <div
               key={shift.id}
               className={`bg-white rounded-xl border hover:shadow-md transition-all duration-300 overflow-hidden ${
-                active 
-                  ? "border-green-200 hover:border-green-300" 
+                active
+                  ? "border-green-200 hover:border-green-300"
                   : "border-gray-200 hover:border-gray-300"
               }`}
             >
@@ -302,11 +337,11 @@ const ShiftSection: React.FC<Props> = ({
                     <div className="flex items-start gap-3 mb-2">
                       <div
                         className={`flex items-center justify-center w-10 h-10 rounded-lg ${
-                          shift.isNightShift 
-                            ? "bg-indigo-100 text-indigo-600" 
-                            : active 
-                              ? "bg-green-100 text-green-600"
-                              : "bg-blue-100 text-blue-600"
+                          shift.isNightShift
+                            ? "bg-indigo-100 text-indigo-600"
+                            : active
+                            ? "bg-green-100 text-green-600"
+                            : "bg-blue-100 text-blue-600"
                         }`}
                       >
                         {shift.isNightShift ? (
@@ -321,7 +356,7 @@ const ShiftSection: React.FC<Props> = ({
                           <h3 className="text-lg font-semibold text-gray-900">
                             {shift.shiftName}
                           </h3>
-                          
+
                           {/* Status Badges */}
                           <div className="flex items-center gap-1">
                             {shift.isNightShift && (
@@ -329,7 +364,7 @@ const ShiftSection: React.FC<Props> = ({
                                 Night Shift
                               </span>
                             )}
-                            
+
                             {active ? (
                               <span className="px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-800 font-medium">
                                 Aktif
@@ -343,26 +378,50 @@ const ShiftSection: React.FC<Props> = ({
                         </div>
 
                         {/* Shift Details */}
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-2">
-                          <div className="flex items-center gap-2 text-gray-600">
-                            <Clock className="w-4 h-4 flex-shrink-0" />
-                            <span className="text-sm">
-                              <span className="font-medium">{shift.shiftStartTime}</span> -{" "}
-                              <span className="font-medium">{shift.shiftEndTime}</span>
-                            </span>
+                        <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3 mt-2">
+                          {/* WAKTU + TANGGAL + HARI */}
+                          <div className="flex flex-col gap-1 text-gray-600">
+                            {/* JAM + TANGGAL */}
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4">
+                              <div className="flex items-center gap-2">
+                                <Clock className="w-4 h-4 flex-shrink-0" />
+                                <span className="text-sm">
+                                  <span className="font-medium">
+                                    {shift.shiftStartTime}
+                                  </span>{" "}
+                                  -{" "}
+                                  <span className="font-medium">
+                                    {shift.shiftEndTime}
+                                  </span>
+                                </span>
+                              </div>
+
+                              <div className="flex items-center gap-2">
+                                <Calendar className="w-4 h-4 flex-shrink-0" />
+                                <span className="text-sm whitespace-nowrap">
+                                  {formatBackendDateToID(shift.dateStart)} -{" "}
+                                  {formatBackendDateToID(shift.dateEnd)}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* HARI KERJA */}
+                            <div className="flex items-center gap-2 text-gray-500">
+                              <Calendar className="w-3.5 h-3.5 opacity-70" />
+                              <span className="text-xs sm:text-sm">
+                                {renderWorkDays(shift.workDays)}
+                              </span>
+                            </div>
                           </div>
 
-                          <div className="flex items-center gap-2 text-gray-600">
-                            <Calendar className="w-4 h-4 flex-shrink-0" />
-                            <span className="text-sm">
-                              {formatDate(shift.dateStart)} - {formatDate(shift.dateEnd)}
-                            </span>
-                          </div>
-
-                          <div className="flex items-center gap-2 text-gray-600">
+                          {/* TOTAL KARYAWAN */}
+                          <div className="flex items-center gap-2 text-gray-600 sm:justify-end">
                             <Users className="w-4 h-4 flex-shrink-0" />
                             <span className="text-sm">
-                              <span className="font-medium">{employeeCount}</span> karyawan
+                              <span className="font-medium">
+                                {employeeCount}
+                              </span>{" "}
+                              karyawan
                             </span>
                           </div>
                         </div>
@@ -379,7 +438,9 @@ const ShiftSection: React.FC<Props> = ({
                           ? "bg-gray-100 text-gray-700"
                           : "text-gray-500 hover:bg-gray-100"
                       }`}
-                      title={isExpanded ? "Sembunyikan detail" : "Tampilkan detail"}
+                      title={
+                        isExpanded ? "Sembunyikan detail" : "Tampilkan detail"
+                      }
                     >
                       {isExpanded ? (
                         <ChevronUp className="w-5 h-5" />
@@ -456,11 +517,11 @@ const ShiftSection: React.FC<Props> = ({
                                 {emp.employeeName}
                               </h5>
                               <p className="text-xs text-gray-500">
-                                ID: {emp.employeeId.substring(0, 8)}...
+                                ID Card: {emp.idCardNumber}
                               </p>
                             </div>
                           </div>
-                          
+
                           {/* Tombol Hapus */}
                           {onRemoveEmployee && (
                             <button
@@ -479,9 +540,12 @@ const ShiftSection: React.FC<Props> = ({
                   ) : (
                     <div className="text-center py-8 text-gray-500">
                       <Users className="w-10 h-10 mx-auto mb-4 text-gray-400" />
-                      <p className="font-medium">Belum ada karyawan di-assign</p>
+                      <p className="font-medium">
+                        Belum ada karyawan di-assign
+                      </p>
                       <p className="text-sm mt-1">
-                        Gunakan tombol "Assign Karyawan" untuk menambahkan karyawan ke shift ini
+                        Gunakan tombol "Assign Karyawan" untuk menambahkan
+                        karyawan ke shift ini
                       </p>
                     </div>
                   )}

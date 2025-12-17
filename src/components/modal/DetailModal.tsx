@@ -19,7 +19,7 @@ import {
   Printer
 } from "lucide-react";
 
-interface DetailField {
+export interface DetailField {
   key: string;
   label: string;
   render?: (value: any) => React.ReactNode;

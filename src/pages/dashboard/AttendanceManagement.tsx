@@ -2,7 +2,8 @@ import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../store";
 import { getAttendanceDataThunk } from "../../store/slices/attendanceSlice";
-import Table, { Column } from "../../components/table/TableData";
+import Table, { renderDate } from "../../components/table/TableData";
+import { AttendanceInfo } from "../../service/attendanceService";
 
 const AttendanceManagementPage: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -12,16 +13,43 @@ const AttendanceManagementPage: React.FC = () => {
     dispatch(getAttendanceDataThunk());
   }, [dispatch]);
 
-  // ================================
-  // TABLE COLUMNS
-  // ================================
-  const columns: Column<any>[] = [
-    { header: "Nama Pegawai", accessor: "employeeName" },
-    { header: "Tanggal", accessor: "date" },
-    { header: "Check In", accessor: "checkInTime" },
-    { header: "Check Out", accessor: "checkOutTime" },
-    { header: "Status", accessor: "status" },
+  const columns = [
+    {
+      header: "Nama Pegawai",
+      accessor: "employeeName" as keyof AttendanceInfo,
+    },
+    {
+      header: "Tanggal",
+      accessor: "date" as keyof AttendanceInfo,
+      render: (value: string) => renderDate(value, "short"),
+    },
+    {
+      header: "Check In",
+      accessor: "checkInTime" as keyof AttendanceInfo,
+      render: (value?: string) => (value ? value.slice(0, 5) : "-"),
+    },
+    {
+      header: "Status Check In",
+      accessor: "checkInNote" as keyof AttendanceInfo,
+      render: (value?: string) => value ?? "-",
+    },
+    {
+      header: "Check Out",
+      accessor: "checkOutTime" as keyof AttendanceInfo,
+      render: (value?: string) => (value ? value.slice(0, 5) : "-"),
+    },
+    {
+      header: "Status Check Out",
+      accessor: "checkOutNote" as keyof AttendanceInfo,
+      render: (value?: string) => value ?? "-",
+    },
+    {
+      header: "Durasi Kerja",
+      accessor: "workDuration" as keyof AttendanceInfo,
+      render: (value?: string) => value ?? "-",
+    },
   ];
+
   return (
     <div className="p-4 space-y-4">
       <h1 className="text-2xl font-bold">Attendance Management</h1>
@@ -32,6 +60,7 @@ const AttendanceManagementPage: React.FC = () => {
         columns={columns}
         data={list?.data ?? []}
         emptyMessage="No attendance records found"
+        loading={loading}
       />
     </div>
   );

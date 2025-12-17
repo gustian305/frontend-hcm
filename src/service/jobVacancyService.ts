@@ -1,6 +1,9 @@
 import api from "../config/axios";
 import { ToISO } from "../utils/date";
 
+
+
+
 export interface JobVacancyRequest {
   location: string;
   position: string;

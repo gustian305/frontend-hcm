@@ -1,3 +1,4 @@
+import { authHeader } from "../api/auth.api";
 import api from "../config/axios";
 import { ToISO } from "../utils/date";
 import { DepartmentPayload } from "./departmentService";
@@ -113,101 +114,124 @@ export interface EmployeeDetailResponse {
   totalIncome: number;
 }
 
-const authHeader = () => {
-  const token = localStorage.getItem("token");
-  if (!token) return { headers: {} };
+class EmployeeService {
+  private base = "/employee-management";
 
-  return {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  };
-};
+  /**
+   * GET /employee-management/data
+   */
+  async getEmployeeData(): Promise<DataEmployee> {
+    const res = await api.get(`${this.base}/data`, {
+      headers: authHeader(),
+    });
 
-export const dataEmployee = async (): Promise<DataEmployee> => {
-  const res = await api.get("/employee-management/data", {
-    ...authHeader(),
-  });
+    const raw = res.data.data;
 
-  const payload = res.data.data;
+    return {
+      count: res.data.count ?? (raw.rows?.length ?? raw.length),
+      data: raw.rows ?? raw,
+    };
+  }
 
-  return {
-    count: res.data.count ?? payload.length,
-    data: payload.rows ?? payload,
-  };
-};
+  /**
+   * GET /employee-management/detail/:id
+   */
+  async getEmployeeDetail(
+    employeeId: string
+  ): Promise<EmployeeDetailResponse> {
+    const res = await api.get<EmployeeDetailResponse>(
+      `${this.base}/detail/${employeeId}`,
+      {
+        headers: authHeader(),
+      }
+    );
+    return res.data;
+  }
 
-export const detailEmployee = async (
-  employeeId: string
-): Promise<EmployeeDetailResponse> => {
-  const res = await api.get<EmployeeDetailResponse>(
-    `/employee-management/detail/${employeeId}`,
-    {
-      ...authHeader(),
-    }
-  );
-  return res.data;
-};
-export const createEmployee = async (payload: EmployeeRequest) => {
-  const finalPayload = { ...payload, joinedDate: ToISO(payload.joinedDate) };
+  /**
+   * POST /employee-management/create
+   */
+  async createEmployee(payload: EmployeeRequest) {
+    const finalPayload = {
+      ...payload,
+      joinedDate: ToISO(payload.joinedDate),
+    };
 
-  const res = await api.post("/employee-management/create", finalPayload, {
-    ...authHeader(),
-  });
+    const res = await api.post(`${this.base}/create`, finalPayload, {
+      headers: authHeader(),
+    });
 
-  return res.data;
-};
+    return res.data;
+  }
 
-export const updateEmployee = async (
-  employeeId: string,
-  payload: EmployeeRequest
-) => {
-  const finalPayload = { ...payload, joinedDate: ToISO(payload.joinedDate) };
+  /**
+   * PUT /employee-management/update/:id
+   */
+  async updateEmployee(employeeId: string, payload: EmployeeRequest) {
+    const finalPayload = {
+      ...payload,
+      joinedDate: ToISO(payload.joinedDate),
+    };
 
-  const res = await api.put(
-    `/employee-management/update/${employeeId}`,
-    finalPayload,
-    {
-      ...authHeader(),
-    }
-  );
+    const res = await api.put(
+      `${this.base}/update/${employeeId}`,
+      finalPayload,
+      {
+        headers: authHeader(),
+      }
+    );
 
-  return res.data;
-};
+    return res.data;
+  }
 
-export const deleteEmployee = async (
-  employeeId: string
-): Promise<{ message?: string }> => {
-  const res = await api.delete(`/employee-management/delete/${employeeId}`, {
-    ...authHeader(),
-  });
-  return res.data;
-};
+  /**
+   * DELETE /employee-management/delete/:id
+   */
+  async deleteEmployee(
+    employeeId: string
+  ): Promise<{ message?: string }> {
+    const res = await api.delete(`${this.base}/delete/${employeeId}`, {
+      headers: authHeader(),
+    });
+    return res.data;
+  }
 
-export const employeeTemplateData = async (): Promise<Blob> => {
-  const res = await api.get("/employee-management/template", {
-    ...authHeader(),
-    responseType: "blob",
-  });
-  return res.data;
-};
+  /**
+   * GET /employee-management/template (excel template)
+   */
+  async getEmployeeTemplate(): Promise<Blob> {
+    const res = await api.get(`${this.base}/template`, {
+      headers: authHeader(),
+      responseType: "blob",
+    });
+    return res.data;
+  }
 
-export const importEmployee = async (file: File): Promise<void> => {
-  const formData = new FormData();
-  formData.append("file", file);
+  /**
+   * POST /employee-management/import
+   */
+  async importEmployee(file: File): Promise<void> {
+    const formData = new FormData();
+    formData.append("file", file);
 
-  await api.post("/employee-management/import", formData, {
-    ...authHeader(),
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
-};
+    await api.post(`${this.base}/import`, formData, {
+      headers: {
+        ...authHeader(),
+        "Content-Type": "multipart/form-data",
+      },
+    });
+  }
 
-export const exportEmployee = async (): Promise<Blob> => {
-  const res = await api.get("/employee-management/export", {
-    ...authHeader(),
-    responseType: "blob",
-  });
-  return res.data;
-};
+  /**
+   * GET /employee-management/export
+   */
+  async exportEmployee(): Promise<Blob> {
+    const res = await api.get(`${this.base}/export`, {
+      headers: authHeader(),
+      responseType: "blob",
+    });
+    return res.data;
+  }
+}
+
+export default new EmployeeService();
