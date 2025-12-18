@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import HumadifyLogo from "../../assets/HumadifySecondary.svg"
 
 interface MenuItem {
   label: string;
@@ -41,7 +42,7 @@ const NavbarLandingPage: React.FC = () => {
             onClick={() => navigate("/")}
           >
             <img
-              src="/src/assets/images/HumadifySecondary.svg"
+              src={HumadifyLogo}
               alt="Logo"
               className={`transition-all ${isScrolled ? "h-7" : "h-9"}`}
             />

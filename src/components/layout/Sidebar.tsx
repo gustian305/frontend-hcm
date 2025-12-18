@@ -14,6 +14,7 @@ import {
 import ModalForm from "../modal/FormModal";
 import { fetchDepartment } from "../../store/slices/departmentSlice";
 import ModalAlert from "../modal/AlertModal";
+import HumadifyLogo from "../../assets/HumadifyPrimary.svg"
 
 interface SidebarProps {
   className?: string;
@@ -87,7 +88,7 @@ const Sidebar = ({ className, toggleSidebar }: SidebarProps) => {
         {/* Header */}
         <div className="mb-4 flex items-center justify-between px-3">
           <img
-            src="src/assets/logo.svg"
+            src={HumadifyLogo}
             alt="Humadify"
             className="h-12 md:h-14 w-auto"
           />

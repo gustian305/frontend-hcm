@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import ImgLanding1 from "../../../assets/imglanding1.png";
 
 const ProblemSection: React.FC = () => {
   return (
@@ -14,7 +15,7 @@ const ProblemSection: React.FC = () => {
           className="flex justify-center"
         >
           <img
-            src="/src/pages/public/landing/assets/images/problem-illustration.png"
+            src={ImgLanding1}
             alt="The Problem Illustration"
             className="w-full max-w-[420px]"
           />

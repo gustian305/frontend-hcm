@@ -3,6 +3,13 @@ import { motion } from "framer-motion";
 import * as LucideIcons from "lucide-react";
 import { featureDetails } from "../data/featureDetail";
 
+export interface FeatureDetail {
+  icon: string;
+  title: string;
+  desc: string;
+  image: string;
+}
+
 const FeaturesDetailSection: React.FC = () => {
   return (
     <section className="py-20 md:py-32 bg-gray-50">

@@ -1,12 +1,13 @@
 import React from "react";
 import { motion } from "framer-motion";
+import BgLanding from "../../../assets/bglandingpage.png"
 
 const HeroSectionFeature: React.FC = () => {
   return (
     <section className="relative h-[90vh] md:h-screen flex items-center justify-center text-white overflow-hidden">
       {/* Background Image */}
       <img
-        src="/src/pages/public/landing/assets/images/modern-business-buildings 2.png"
+        src={BgLanding}
         alt="Background"
         className="absolute inset-0 w-full h-full object-cover z-0 brightness-50"
       />

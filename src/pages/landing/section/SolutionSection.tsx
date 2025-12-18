@@ -1,30 +1,13 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { featureDetails } from "../data/featureDetail"
 
-// ===== Mock Data =====
-const features = [
-  {
-    image: "/src/pages/public/landing/assets/images/bg-solution.png",
-    title: "Absensi Karyawan",
-    desc: "Catat kehadiran secara real-time dengan sistem absensi online yang praktis dan akurat.",
-  },
-  {
-    image: "/src/pages/public/landing/assets/images/bg-solution.png",
-    title: "Pengajuan Cuti",
-    desc: "Ajukan cuti atau izin dengan mudah dan pantau status persetujuan secara langsung.",
-  },
-  {
-    image: "/src/pages/public/landing/assets/images/bg-solution.png",
-    title: "Nilai Update",
-    desc: "Lihat penilaian kinerja dan feedback berkala untuk mendukung perkembangan karier.",
-  },
-  {
-    image: "/src/pages/public/landing/assets/images/bg-solution.png",
-    title: "Slip Gaji",
-    desc: "Akses slip gaji bulanan secara digital, aman, dan kapan saja Anda butuhkan.",
-  },
-];
-
+export interface FeatureDetail {
+  icon: string;
+  title: string;
+  desc: string;
+  image: string;
+}
 const SolutionSection: React.FC = () => {
   return (
     <section className="py-20 md:py-32 bg-gray-50">
@@ -47,7 +30,7 @@ const SolutionSection: React.FC = () => {
 
         {/* Features Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-8">
-          {features.map((item, index) => (
+          {featureDetails.map((item, index) => (
             <motion.div
               key={index}
               initial={{ opacity: 0, y: 20 }}

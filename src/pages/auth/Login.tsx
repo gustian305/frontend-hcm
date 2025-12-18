@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { signInWithPopup } from "firebase/auth";
 import { auth, googleProvider } from "../../config/firebase";
 import OTPModal from "../../components/modal/OtpModal";
+import HumadifyLogo from "../../assets/HumadifySecondary.svg";
 
 const LoginPage = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -87,7 +88,7 @@ const LoginPage = () => {
       {/* Form */}
       <div className="flex-1 flex flex-col justify-center items-center bg-white px-12 py-16 max-w-lg shadow-lg">
         <img
-          src="\src\assets\logo 1.svg"
+          src={HumadifyLogo}
           alt="logo"
           className="h-18 w-auto transition-all duration-300"
         />
