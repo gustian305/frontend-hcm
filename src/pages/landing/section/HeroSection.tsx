@@ -1,14 +1,14 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Link as ScrollLink } from "react-scroll";
-import BgLanding from "../../../assets/bglandingpage.png";
+import BgResource from "../../../assets/bglandingpage.png";
 
 const HeroSection: React.FC = () => {
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-black text-white" id="hero">
       {/* Background Image */}
       <img
-        src={BgLanding}
+        src={BgResource}
         alt="Modern business background"
         loading="lazy"
         className="absolute inset-0 w-full h-full object-cover brightness-[0.55] z-0 transform scale-[1.05] transition-transform duration-[6000ms] ease-linear hover:scale-110"
