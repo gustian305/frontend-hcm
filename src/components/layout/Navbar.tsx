@@ -1,7 +1,7 @@
 import { Menu, ChevronDown } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "../../store";
-import { Logout as logoutService } from "../../service/authService";
+import authService from "../../service/authService";
 import { logout } from "../../store/slices/authSlice";
 import { useState } from "react";
 import ModalAlert from "../modal/AlertModal";
@@ -39,7 +39,7 @@ const Navbar = ({ toggleSidebar }: NavbarProps) => {
     try {
       setModalOpen(false);
 
-      logoutService(); // hapus token localstorage
+      authService.logout(); // hapus token localstorage
       dispatch(logout()); // reset redux
 
       setModalType("success");

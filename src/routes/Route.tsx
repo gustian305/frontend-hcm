@@ -12,7 +12,6 @@ import LandingPage from "../pages/landing/LandingPage";
 import MainLayout from "../components/layout/Main";
 import RolePermissionPage from "../pages/dashboard/RolePermissionManagement";
 import ShiftPage from "../pages/dashboard/ShiftManagement";
-import CompleteProfilePage from "../pages/auth/completeProfile";
 import AttendancePage from "../pages/dashboard/Attendance";
 import AttendanceManagementPage from "../pages/dashboard/AttendanceManagement";
 import WorkLeavePage from "../pages/dashboard/WorkLeave";
@@ -27,6 +26,8 @@ import PricingPage from "../pages/landing/PricingPage";
 import ResourcesPage from "../pages/landing/ResourcesPage";
 import FeaturesPage from "../pages/landing/FeaturesPage";
 import ApplicantManagementPage from "../pages/dashboard/Applicant";
+import ResetPasswordPage from "../pages/auth/ResetPassword";
+import CompleteProfilePage from "../pages/auth/CompleteProfile";
 
 const AppRoutes = () => {
   return (
@@ -39,6 +40,7 @@ const AppRoutes = () => {
       <Route path="recruitment" element={<RecruitmentPublicPage />} />
       {/* ======================== AUTH ======================== */}
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
 
       {/* =================== COMPLETE PROFILE ================== */}
       <Route element={<ProtectedCompleteProfile />}>

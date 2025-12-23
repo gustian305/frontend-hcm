@@ -19,9 +19,6 @@ const initialState: CompleteProfileState = {
   profileData: null,
 };
 
-// ===============================
-//       Async Thunk
-// ===============================
 export const submitCompleteProfile = createAsyncThunk<
   CompleteProfileResponse,
   { userId: string; data: CompleteProfileRequest },
@@ -37,9 +34,6 @@ export const submitCompleteProfile = createAsyncThunk<
   }
 });
 
-// ===============================
-//       Slice
-// ===============================
 const completeProfileSlice = createSlice({
   name: "completeProfile",
   initialState,
@@ -68,7 +62,6 @@ const completeProfileSlice = createSlice({
         state.successMessage = action.payload.message;
         state.profileData = action.payload.data;
 
-        // token disimpan DI SINI saja
         localStorage.setItem("token", action.payload.accessToken);
       }
     );
@@ -83,9 +76,6 @@ const completeProfileSlice = createSlice({
   },
 });
 
-// ===============================
-//       Export
-// ===============================
 export const { clearCompleteProfileError, resetCompleteProfileState } =
   completeProfileSlice.actions;
 

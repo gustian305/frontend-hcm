@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import HumadifyLogo from "../../assets/HumadifySecondary.svg"
+import HumadifyLogo from "../../assets/HumadifySecondary.png";
 
 interface MenuItem {
   label: string;
@@ -28,6 +28,9 @@ const NavbarLandingPage: React.FC = () => {
 
   const toggleDrawer = () => setMobileOpen(!mobileOpen);
 
+  // Helper: check if menu is active
+  const isActive = (path: string) => location.pathname === path;
+
   return (
     <>
       <header
@@ -37,10 +40,7 @@ const NavbarLandingPage: React.FC = () => {
       >
         <div className="flex justify-between items-center px-6 py-2">
           {/* Logo */}
-          <div
-            className="cursor-pointer"
-            onClick={() => navigate("/")}
-          >
+          <div className="cursor-pointer" onClick={() => navigate("/")}>
             <img
               src={HumadifyLogo}
               alt="Logo"
@@ -55,7 +55,7 @@ const NavbarLandingPage: React.FC = () => {
                 key={item.path}
                 to={item.path}
                 className={`relative font-medium text-sm transition-all ${
-                  location.pathname === item.path ? "after:w-full" : "after:w-0"
+                  isActive(item.path) ? "text-blue-500 after:w-full" : "text-black after:w-0"
                 } after:absolute after:left-0 after:bottom-0 after:h-[2px] after:bg-blue-500 after:transition-all hover:after:w-full`}
               >
                 {item.label}
@@ -72,10 +72,7 @@ const NavbarLandingPage: React.FC = () => {
           </button>
 
           {/* Mobile Menu Button */}
-          <button
-            className="md:hidden p-2"
-            onClick={toggleDrawer}
-          >
+          <button className="md:hidden p-2" onClick={toggleDrawer}>
             <span className="block w-6 h-0.5 bg-black mb-1"></span>
             <span className="block w-6 h-0.5 bg-black mb-1"></span>
             <span className="block w-6 h-0.5 bg-black"></span>
@@ -91,15 +88,12 @@ const NavbarLandingPage: React.FC = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-4">
-              <img
-                src="/src/assets/images/HumadifySecondary.svg"
-                alt="Logo"
-                className="h-7"
-              />
+              <img src={HumadifyLogo} alt="Logo" className="h-7" />
               <button onClick={toggleDrawer} className="text-black font-bold text-xl">
                 &times;
               </button>
             </div>
+
             <nav className="flex flex-col gap-3">
               {menuItems.map((item) => (
                 <Link
@@ -107,13 +101,14 @@ const NavbarLandingPage: React.FC = () => {
                   to={item.path}
                   onClick={toggleDrawer}
                   className={`font-medium text-base ${
-                    location.pathname === item.path ? "text-blue-500" : "text-black"
+                    isActive(item.path) ? "text-blue-500" : "text-black"
                   }`}
                 >
                   {item.label}
                 </Link>
               ))}
             </nav>
+
             <button
               className="mt-4 w-full bg-blue-500 text-white font-medium py-2 rounded-lg"
               onClick={() => {

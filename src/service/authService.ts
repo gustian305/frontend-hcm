@@ -60,66 +60,128 @@ export interface ResendOTPResponse {
   message: string;
 }
 
-const authHeader = () => {
-  const token = localStorage.getItem("token");
-  if (!token) return { headers: {} };
-
-  return {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  };
-};
-
-export const login = async (payload: LoginRequest): Promise<AuthResponse> => {
-    const res = await api.post<AuthResponse>("/login", payload);
-    return res.data;
+export interface ForgotPasswordRequest {
+  email: string;
 }
 
-export const oauthLogin = async (payload: OAuthLoginRequest): Promise<AuthResponse> => {
-    const res = await api.post<AuthResponse>("/oauth", payload);
-    return res.data;
+export interface ForgotPasswordResponse {
+  userId: string;
 }
 
-export const VerifyOTPLogin = async (
-  userId: string,
-  otp: string
-): Promise<AuthResponse> => {
-  const res = await api.post(`/verify-otp/${userId}`, { otp });
-  return res.data;
-};
+export interface VerifyOTPPasswordResponse {
+  resetToken: string;
+}
 
-export const ResendOTPLogin = async (
-  userId: string
-): Promise<ResendOTPResponse> => {
-  const res = await api.post(`/resend-otp/${userId}`);
-  return res.data;
-};
+export interface ResetPasswordRequest {
+  newPassword: string;
+  confirmPassword: string;
+}
 
-export const CompleteProfile = async (
-  userId: string,
-  payload: CompleteProfileRequest
-): Promise<AuthResponse> => {
-  const token = localStorage.getItem("token");
-  if (!token) throw new Error("Token not found");
+export interface ResetPasswordResponse {
+  message: string;
+}
 
-  const res = await api.post<AuthResponse>(
-    `/complete-profile/${userId}`, 
-    payload,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+class AuthService {
+  async login(payload: LoginRequest): Promise<AuthResponse> {
+    const res = await api.post<AuthResponse>("/login", payload, {
+      headers: { "X-Public-Request": "true" },
     });
-  return res.data;
-};
-
-export const Logout = async (): Promise<void> => {
-  try {
-    await api.post("/logout", {}, authHeader());
-  } catch (err) {
-    console.error("Logout error:", err);
-  } finally {
-    localStorage.removeItem("token"); 
+    return res.data;
   }
-};
+
+  async oauthLogin(payload: OAuthLoginRequest): Promise<AuthResponse> {
+    const res = await api.post<AuthResponse>("/oauth", payload, {
+      headers: { "X-Public-Request": "true" },
+    });
+    return res.data;
+  }
+
+  async verifyOTP(userId: string, otp: string): Promise<AuthResponse> {
+    const res = await api.post<AuthResponse>(
+      `/verify-otp/${userId}`,
+      { otp },
+      {
+        headers: { "X-Public-Request": "true" },
+      }
+    );
+    return res.data;
+  }
+
+  async verifyOTPResetPassword(
+    userId: string,
+    otp: string
+  ): Promise<VerifyOTPPasswordResponse> {
+    const res = await api.post<VerifyOTPPasswordResponse>(
+      `/verify-otp-forgot-password/${userId}`,
+      { otp },
+      { headers: { "X-Public-Request": "true" } }
+    );
+    return res.data;
+  }
+
+  async resendOTP(userId: string): Promise<ResendOTPResponse> {
+    const res = await api.post<ResendOTPResponse>(
+      `/resend-otp/${userId}`,
+      {},
+      {
+        headers: { "X-Public-Request": "true" },
+      }
+    );
+    return res.data;
+  }
+
+  async resendOTPResetPassword(userId: string): Promise<ResendOTPResponse> {
+    const res = await api.post<ResendOTPResponse>(
+      `/resend-otp-forgot-password/${userId}`,
+      {},
+      {
+        headers: { "X-Public-Request": "true" },
+      }
+    );
+    return res.data;
+  }
+
+  async forgotPassword(
+    payload: ForgotPasswordRequest
+  ): Promise<ForgotPasswordResponse> {
+    const res = await api.post<ForgotPasswordResponse>(
+      "/forgot-password",
+      payload,
+      { headers: { "X-Public-Request": "true" } }
+    );
+    return res.data;
+  }
+
+  async resetPassword(
+    token: string,
+    payload: ResetPasswordRequest
+  ): Promise<ResetPasswordResponse> {
+    const res = await api.post<ResetPasswordResponse>(
+      `/reset-password/${token}`,
+      payload,
+      { headers: { "X-Public-Request": "true" } }
+    );
+    return res.data;
+  }
+
+  async completeProfile(
+    userId: string,
+    payload: CompleteProfileRequest
+  ): Promise<AuthResponse> {
+    const res = await api.post<AuthResponse>(
+      `/complete-profile/${userId}`,
+      payload
+    );
+    return res.data;
+  }
+
+  async logout(): Promise<void> {
+    try {
+      await api.post("/logout");
+    } finally {
+      localStorage.removeItem("token");
+    }
+  }
+}
+
+export default new AuthService();

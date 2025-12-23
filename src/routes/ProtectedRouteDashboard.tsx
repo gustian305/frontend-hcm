@@ -1,3 +1,4 @@
+import HumadifyLogo from "../assets/HumadifySecondary.svg";
 import { useSelector } from "react-redux";
 import { RootState } from "../store";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
@@ -10,10 +11,21 @@ interface Props {
 }
 
 const ProtectedDashboard = ({ permission, children }: Props) => {
-  const { isAuthenticated, needsProfile, userInfo } = useSelector(
+  const { isAuthenticated, needsProfile, userInfo, initialized } = useSelector(
     (state: RootState) => state.auth
   );
   const location = useLocation();
+
+  if (!initialized) {
+    return (
+      <div className="fixed inset-0 flex flex-col items-center justify-center bg-white z-50">
+        <img src={HumadifyLogo} alt="Humadify Logo" className="h-20 w-auto mb-4 animate-pulse" />
+        <span className="text-lg font-semibold text-gray-700 animate-pulse">
+          Loading...
+        </span>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace state={{ from: location }} />;

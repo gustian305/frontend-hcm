@@ -3,12 +3,14 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../store";
 import { completeProfileThunk } from "../../store/slices/authSlice";
 import { useNavigate } from "react-router-dom";
+import HumadifyLogo from "../../assets/HumadifySecondary.svg";
+import ModalAlert from "../../components/modal/AlertModal";
 
 const CompleteProfilePage = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
 
-  const { userInfo, profileLoading } = useSelector((s: RootState) => s.auth);
+  const { userInfo, loading } = useSelector((s: RootState) => s.auth);
 
   const [form, setForm] = useState({
     name: userInfo?.name || "",
@@ -16,7 +18,28 @@ const CompleteProfilePage = () => {
     companyName: "",
   });
 
+  const [modal, setModal] = useState<{
+    open: boolean;
+    type: "success" | "error";
+    title?: string;
+    message: string;
+  }>({
+    open: false,
+    type: "success",
+    message: "",
+  });
+
   const handleSubmit = async () => {
+    if (!userInfo?.id) {
+      setModal({
+        open: true,
+        type: "error",
+        title: "User ID Required",
+        message: "User ID tidak ditemukan. Silakan login kembali.",
+      });
+      return;
+    }
+
     const res = await dispatch(
       completeProfileThunk({
         userId: userInfo.id,
@@ -25,7 +48,21 @@ const CompleteProfilePage = () => {
     );
 
     if (res.meta.requestStatus === "fulfilled") {
-      navigate("/dashboard");
+      setModal({
+        open: true,
+        type: "success",
+        title: "Profil Lengkap",
+        message: "Profil berhasil dilengkapi!",
+      });
+
+      setTimeout(() => navigate("/dashboard"), 1500);
+    } else {
+      setModal({
+        open: true,
+        type: "error",
+        title: "Gagal",
+        message: "Terjadi kesalahan saat menyimpan profil. Silakan coba lagi.",
+      });
     }
   };
 
@@ -43,19 +80,18 @@ const CompleteProfilePage = () => {
       {/* Form */}
       <div className="flex-1 flex flex-col justify-center items-center bg-white px-12 py-16 max-w-lg shadow-lg">
         <img
-          src="\src\assets\logo.svg"
+          src={HumadifyLogo}
           alt="logo"
-          className="h-16 w-auto transition-all duration-300"
+          className="h-18 w-auto transition-all duration-300"
         />
         <h2 className="mt-6 text-2xl font-semibold text-gray-800 text-center">
           Complete Your Profile
         </h2>
         <p className="mt-2 text-gray-600 text-center">
-          Silakan lengkapi profil Anda untuk mulai mengelola data karyawan dan
-          HR.
+          Silakan lengkapi profil Anda untuk mulai mengelola data karyawan dan HR.
         </p>
 
-        {/* Input Full Name */}
+        {/* Input Fields */}
         <div className="w-full mt-6">
           <label className="block text-gray-700 text-sm mb-1">Full Name</label>
           <input
@@ -67,11 +103,8 @@ const CompleteProfilePage = () => {
           />
         </div>
 
-        {/* Input Phone Number */}
         <div className="w-full mt-4">
-          <label className="block text-gray-700 text-sm mb-1">
-            Phone Number
-          </label>
+          <label className="block text-gray-700 text-sm mb-1">Phone Number</label>
           <input
             type="text"
             placeholder="Enter your phone number"
@@ -81,11 +114,8 @@ const CompleteProfilePage = () => {
           />
         </div>
 
-        {/* Input Company Name */}
         <div className="w-full mt-4">
-          <label className="block text-gray-700 text-sm mb-1">
-            Company Name
-          </label>
+          <label className="block text-gray-700 text-sm mb-1">Company Name</label>
           <input
             type="text"
             placeholder="Enter your company name"
@@ -99,13 +129,22 @@ const CompleteProfilePage = () => {
         <div className="w-full mt-6">
           <button
             onClick={handleSubmit}
-            disabled={profileLoading}
+            disabled={loading}
             className="w-full py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition font-semibold"
           >
-            {profileLoading ? "Saving..." : "Submit"}
+            {loading ? "Saving..." : "Submit"}
           </button>
         </div>
       </div>
+
+      {/* MODAL ALERT */}
+      <ModalAlert
+        open={modal.open}
+        type={modal.type}
+        title={modal.title}
+        message={modal.message}
+        onClose={() => setModal({ ...modal, open: false })}
+      />
     </div>
   );
 };

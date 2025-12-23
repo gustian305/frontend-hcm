@@ -1,7 +1,6 @@
-// src/components/modal/ModalAlert.tsx
 import React, { useEffect } from "react";
 import { motion } from "framer-motion";
-import { CheckCircle, XCircle, AlertCircle } from "lucide-react"; // Optional: install lucide-react jika belum
+import { CheckCircle, XCircle, AlertCircle } from "lucide-react";
 
 interface ModalAlertProps {
   open: boolean;
@@ -12,7 +11,7 @@ interface ModalAlertProps {
   onConfirm?: () => void;
   confirmText?: string;
   cancelText?: string;
-  autoCloseDuration?: number; // Custom duration untuk auto close
+  autoCloseDuration?: number;
 }
 
 const ModalAlert: React.FC<ModalAlertProps> = ({

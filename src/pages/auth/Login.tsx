@@ -4,39 +4,60 @@ import { AppDispatch, RootState } from "../../store";
 import {
   loginThunk,
   oauthLoginThunk,
-  verifyOTPThunk,
+  resendOTPLoginThunk,
+  resendOTPResetPasswordThunk,
+  verifyOTPLoginThunk,
+  verifyOTPResetPasswordThunk,
 } from "../../store/slices/authSlice";
 import { useNavigate } from "react-router-dom";
 import { signInWithPopup } from "firebase/auth";
 import { auth, googleProvider } from "../../config/firebase";
 import OTPModal from "../../components/modal/OtpModal";
 import HumadifyLogo from "../../assets/HumadifySecondary.svg";
+import ModalAlert from "../../components/modal/AlertModal";
+import ForgotPasswordModal from "../../components/modal/ForgotPasswordModal";
+import { Eye, EyeOff } from "lucide-react";
+
+type AlertType = "success" | "error" | "warning" | "confirm";
+type OTPMode = "login" | "reset-password";
 
 const LoginPage = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-
-  const { loading, needsProfile } = useSelector(
-    (s: RootState) => s.auth
-  );
-
+  const { loading } = useSelector((s: RootState) => s.auth);
   const [form, setForm] = useState({ email: "", password: "" });
   const [otpOpen, setOtpOpen] = useState(false);
   const [localOtpUserId, setLocalOtpUserId] = useState<string | null>(null);
+  const [otpMode, setOtpMode] = useState<OTPMode>("login");
+  const [alertOpen, setAlertOpen] = useState(false);
+  const [alertType, setAlertType] = useState<AlertType>("success");
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertTitle, setAlertTitle] = useState<string | undefined>(undefined);
+  const [showPassword, setShowPassword] = useState(false);
+  const [forgotOpen, setForgotOpen] = useState(false);
+
+  const showAlert = (type: AlertType, message: string, title?: string) => {
+    setAlertType(type);
+    setAlertMessage(message);
+    setAlertTitle(title);
+    setAlertOpen(true);
+  };
 
   const handleLogin = async () => {
     try {
       const data = await dispatch(loginThunk(form)).unwrap();
-      console.log("[LOGIN RESPONSE]", data);
 
       if (data.otpRequest) {
         setLocalOtpUserId(data.userInfo.id);
+        setOtpMode("login");
         setOtpOpen(true);
+
+        showAlert("success", "Kode OTP telah dikirim ke email Anda");
         return;
       }
     } catch (err) {
       console.error("Login failed:", err);
-      alert("Login gagal");
+      showAlert("error", "Login gagal, periksa email & password Anda!");
     }
   };
 
@@ -50,37 +71,93 @@ const LoginPage = () => {
 
       if (data.otpRequest) {
         setLocalOtpUserId(data.userInfo.id);
+        setOtpMode("login");
         setOtpOpen(true);
+
+        showAlert("success", "Kode OTP telah dikirim ke email Anda");
         return;
       }
     } catch (error) {
       console.error("Google login failed:", error);
-      alert("Google Login gagal");
+      showAlert("error", "Google Login gagal, periksa koneksi internet Anda!");
     }
   };
 
   const handleVerifyOTP = async (otp: string) => {
+    if (!localOtpUserId) return;
+
+    try {
+      if (otpMode === "login") {
+        const res = await dispatch(
+          verifyOTPLoginThunk({
+            userId: localOtpUserId,
+            otp,
+          })
+        ).unwrap();
+
+        setOtpOpen(false);
+
+        if (res.needsProfile) {
+          navigate(`/complete-profile/${localOtpUserId}`);
+        } else {
+          navigate("/dashboard");
+        }
+      }
+
+      if (otpMode === "reset-password") {
+        const res = await dispatch(
+          verifyOTPResetPasswordThunk({
+            userId: localOtpUserId,
+            otp,
+          })
+        ).unwrap();
+
+        setOtpOpen(false);
+
+        navigate(`/reset-password/${res.resetToken}`);
+      }
+    } catch (err) {
+      console.error("OTP failed:", err);
+      showAlert("error", "Verifikasi OTP gagal");
+    }
+  };
+
+  const handleResend = async () => {
     if (!localOtpUserId) {
-      console.error("User ID missing, cannot verify OTP");
+      showAlert("error", "User tidak valid untuk resend OTP");
       return;
     }
 
     try {
-      const res = await dispatch(
-        verifyOTPThunk({ userId: localOtpUserId, otp })
-      ).unwrap();
+      if (otpMode === "login") {
+        await dispatch(
+          resendOTPLoginThunk({ userId: localOtpUserId })
+        ).unwrap();
 
-      setOtpOpen(false);
+        showAlert("success", "Kode OTP login berhasil dikirim ulang");
+      }
 
-      if (res.needsProfile) {
-        navigate(`/complete-profile/${localOtpUserId}`);
-      } else {
-        navigate("/dashboard");
+      if (otpMode === "reset-password") {
+        await dispatch(
+          resendOTPResetPasswordThunk({ userId: localOtpUserId })
+        ).unwrap();
+
+        showAlert(
+          "success",
+          "Kode OTP reset password berhasil dikirim ke email"
+        );
       }
     } catch (err) {
-      console.error("OTP verification failed:", err);
-      alert("OTP verification failed");
+      console.error("Failed to resend OTP:", err);
+      showAlert("error", "Gagal mengirim ulang OTP");
     }
+  };
+
+  const handleForgotSuccess = (userId: string) => {
+    setLocalOtpUserId(userId);
+    setOtpMode("reset-password");
+    setForgotOpen(false);
+    setOtpOpen(true);
   };
 
   return (
@@ -99,7 +176,6 @@ const LoginPage = () => {
           Masuk untuk mengelola data karyawan, absensi, kinerja, dan semua
           kebutuhan HR dalam satu sistem terpadu.
         </p>
-
         {/* Input Email */}
         <div className="w-full mt-6">
           <label className="block text-gray-700 text-sm mb-1">Email</label>
@@ -111,28 +187,46 @@ const LoginPage = () => {
             className="w-full p-3 border border-gray-300 rounded-full focus:ring-2 focus:ring-blue-400 outline-none"
           />
         </div>
-
+  
         {/* Input Password */}
         <div className="w-full mt-4">
           <label className="block text-gray-700 text-sm mb-1">Password</label>
-          <input
-            type="password"
-            value={form.password}
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
-            placeholder="Enter your password"
-            className="w-full p-3 border border-gray-300 rounded-full focus:ring-2 focus:ring-blue-400 outline-none"
-          />
+
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              placeholder="Enter your password"
+              className="w-full p-3 pr-12 border border-gray-300 rounded-full focus:ring-2 focus:ring-blue-400 outline-none"
+            />
+
+            {/* Icon Mata */}
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+            >
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
+          </div>
+
           <div className="mt-2 flex justify-between items-center text-sm text-gray-500">
             <label className="flex items-center gap-2">
               <input type="checkbox" className="form-checkbox" />
               Remember me
             </label>
-            <a href="#" className="text-blue-500 hover:underline">
+
+            <button
+              type="button"
+              onClick={() => setForgotOpen(true)}
+              className="text-blue-500 hover:underline"
+            >
               Lupa Password
-            </a>
+            </button>
           </div>
         </div>
-
+        
         {/* Buttons */}
         <div className="w-full mt-6 flex flex-col gap-3">
           <button
@@ -169,8 +263,24 @@ const LoginPage = () => {
       <OTPModal
         isOpen={otpOpen}
         loading={loading}
+        mode={otpMode}
         onClose={() => setOtpOpen(false)}
         onSubmit={handleVerifyOTP}
+        onResend={handleResend}
+      />
+
+      <ForgotPasswordModal
+        isOpen={forgotOpen}
+        onClose={() => setForgotOpen(false)}
+        onSuccess={handleForgotSuccess}
+      />
+
+      <ModalAlert
+        open={alertOpen}
+        type={alertType}
+        title={alertTitle}
+        message={alertMessage}
+        onClose={() => setAlertOpen(false)}
       />
     </div>
   );

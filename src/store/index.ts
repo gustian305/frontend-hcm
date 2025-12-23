@@ -4,7 +4,6 @@ import departmentReducer from "./slices/departmentSlice";
 import rolePermissionReducer from "./slices/rolePermissionSlice";
 import employeeReducer from "./slices/employeeSlice";
 import shiftReducer from "./slices/shiftSlice";
-import forgotPasswordReducer from "./slices/forgotPasswordSlice";
 import attendanceReducer from "./slices/attendanceSlice";
 import workLeaveReducer from "./slices/workLeaveSlice";
 import jobVacancyReducer from "./slices/jobVacancySlice";
@@ -16,7 +15,6 @@ import applicantReducer from "./slices/applicantSlice";
 export const store = configureStore({
   reducer: {
     auth: authReducer,
-    forgotPassword: forgotPasswordReducer,
     department: departmentReducer,
     rolePermission: rolePermissionReducer,
     employee: employeeReducer,
